@@ -59,9 +59,10 @@ def upload_file():
 @app.route('/submit', methods=['POST'])
 def submit_file():
     filename = request.form.get('filename')
-    file = request.files['photo'] if 'photo' in request.files else None
-    if not file:
-        return "No photo uploaded", 400
+    file = request.files.get('photo')
+
+    if not file or not filename:
+        return jsonify({"error": "Missing file or filename"}), 400
 
     metadata = extract_metadata(file.stream)
 
@@ -111,7 +112,6 @@ Metadata:
         "response": full_story_output.strip()
     }
 
-    # Save full result object, not just raw output
     save_json_to_s3({
         "filename": filename,
         "result": result
@@ -121,6 +121,17 @@ Metadata:
         "success": True,
         "result": result
     })
+
+@app.route('/count', methods=['GET'])
+def count():
+    try:
+        response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix='logs/')
+        files = response.get('Contents', [])
+        json_files = [f for f in files if f['Key'].endswith('.json')]
+        return jsonify({"count": len(json_files)})
+    except Exception as e:
+        print("Error in /count:", e)
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')
 def serve_file(filename):
