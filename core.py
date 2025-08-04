@@ -96,7 +96,21 @@ Metadata:
     filename_prefix = filename.rsplit('.', 1)[0]
     save_json_to_s3({"filename": filename, "output": full_story_output}, filename_prefix)
 
-    return jsonify({"output": full_story_output})
+    result = {
+    "answers": {
+        "born_real": [],
+        "left_untouched": [],
+        "shared_naturally": []
+    },
+    "yes_count": full_story_output.count("✅ Yes"),
+    "no_count": full_story_output.count("❌ No"),
+    "response": full_story_output.strip()
+}
+
+return jsonify({
+    "success": True,
+    "result": result
+})
 
 @app.route('/uploads/<filename>')
 def serve_file(filename):

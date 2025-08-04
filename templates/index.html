@@ -285,17 +285,14 @@ function submitPhoto() {
   })
   .then(response => response.json())
   .then(data => {
-    // Optionally replace this with redirect or UI update
-    alert("Scan complete.");
-    console.log("Scan Result:", data.output);
-    location.reload(); // Or redirect to a results.html page if you build one
+     sessionStorage.setItem("scan_result", JSON.stringify(data));
+    window.location.href = "/results.html";
   })
   .catch(err => {
     console.error(err);
     alert('Something went wrong.');
   });
 }
-
     function resetUpload() {
       uploadedFile = null;
       document.querySelectorAll('.photo-input').forEach(input => input.value = '');
