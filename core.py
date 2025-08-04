@@ -64,20 +64,21 @@ def upload_file():
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
-    filename = request.form.get('filename')
-    file = request.files.get('photo')
-    s3_url = request.form.get('url')
+    try:
+        filename = request.form.get('filename')
+        file = request.files.get('photo')
+        s3_url = request.form.get('url')
 
-    if not file or not filename:
-        return jsonify({"success": False, "error": "Missing file or filename"}), 400
+        if not file or not filename:
+            return jsonify({"success": False, "error": "Missing file or filename"}), 400
 
-    metadata = extract_metadata(file.stream)
+        metadata = extract_metadata(file.stream)
 
-    system_prompt = """
+        system_prompt = """
 Return only valid JSON. Do not explain anything. Group exactly 9 questions into 3 labeled sections: 'born_real', 'left_untouched', and 'shared_naturally'. Each section must include exactly 3 items, formatted as [question_text, true|false]. Also include: final_verdict (emoji + text), yes_count (0–9), no_count (0–9), and a response that’s 30 words or less, neutral, and tells a story about that photo's life in JSON only. No markdown. No extra commentary.
 """
 
-    user_prompt = f"""
+        user_prompt = f"""
 Use the metadata below to answer the following 9 questions.
 
 → Born Real?
@@ -101,33 +102,38 @@ Metadata:
 {json.dumps(metadata, indent=2)}
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-    )
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+        )
 
-    content = response.choices[0].message.content.strip()
-    try:
-        result_json = json.loads(content)
-    except json.JSONDecodeError:
-        return jsonify({"success": False, "error": "Invalid JSON returned from GPT"}), 500
+        content = response.choices[0].message.content.strip()
+        print("🔎 GPT raw output:", content)
 
-    # Normalize structure for frontend
-    result_json["answers"] = {
-        "born_real": result_json.pop("born_real", []),
-        "left_untouched": result_json.pop("left_untouched", []),
-        "shared_naturally": result_json.pop("shared_naturally", [])
-    }
+        try:
+            result_json = json.loads(content)
+        except json.JSONDecodeError:
+            return jsonify({"success": False, "error": "Invalid JSON returned from GPT"}), 500
 
-    result_json["filename"] = filename
-    result_json["url"] = s3_url
+        result_json["answers"] = {
+            "born_real": result_json.pop("born_real", []),
+            "left_untouched": result_json.pop("left_untouched", []),
+            "shared_naturally": result_json.pop("shared_naturally", [])
+        }
 
-    save_json_to_s3({"filename": filename, "result": result_json}, filename.rsplit(".", 1)[0])
+        result_json["filename"] = filename
+        result_json["url"] = s3_url
 
-    return jsonify({"success": True, "result": result_json})
+        save_json_to_s3({"filename": filename, "result": result_json}, filename.rsplit(".", 1)[0])
+
+        return jsonify({"success": True, "result": result_json})
+
+    except Exception as e:
+        print("❌ Error in /submit:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/count', methods=['GET'])
 def count():
