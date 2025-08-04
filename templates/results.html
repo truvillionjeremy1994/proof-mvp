@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #f0f0f0;
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .result-image {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      display: block;
+      margin: 1rem auto;
+    }
+
+    .status {
+      background: #222;
+      padding: 1.5rem;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .btn-blue {
+      background-color: #2196F3;
+      color: white;
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: block;
+      margin: 2rem auto 0;
+    }
+
+    .clue-block h3 {
+      margin: 1rem 0 0.3rem;
+    }
+
+    .clue-block p {
+      margin: 0.2rem 0;
+    }
+
+    .summary {
+      margin-top: 1.5rem;
+      font-size: 1.05rem;
+      margin-bottom: 2rem;
+    }
+
+    #fade {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      z-index: 9999;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    #fade.show {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="fade"><span id="fade-text">Extracting Metadata</span><span id="dots">.</span></div>
+
+  <div id="results" class="status">
+    <div id="verdict"></div>
+    <img id="image" class="result-image" src="" alt="Uploaded Photo" />
+    <div class="clue-block" id="clues"></div>
+
+    <div class="summary">
+      <strong style="display: block; margin-bottom: 0;">Summary:</strong>
+      <p id="summary" style="margin-top: 0.2rem;"></p>
+    </div>
+
+    <button class="btn-blue" onclick="location.href='/'">Scan Another Photo</button>
+  </div>
+
+  <div id="error-message" style="display: none; text-align: center; margin-top: 2rem;">
+    <h2>❌ No image found</h2>
+    <p>Please try uploading a new photo from the homepage.</p>
+  </div>
+
+  <script>
+    const fade = document.getElementById('fade');
+    const dotsSpan = document.getElementById('dots');
+    let dotCount = 1;
+    fade.classList.add('show');
+
+    setInterval(() => {
+      dotCount = (dotCount % 3) + 1;
+      dotsSpan.textContent = '.'.repeat(dotCount);
+    }, 500);
+
+    setTimeout(() => {
+      document.getElementById('fade-text').textContent = 'Delivering Results';
+    }, 5000);
+
+    setTimeout(() => {
+      fade.classList.remove('show');
+    }, 10000);
+
+    function getFilename() {
+      const fromSession = sessionStorage.getItem("uploadedFilename");
+      if (fromSession) return fromSession;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('filename');
+    }
+
+    const filename = getFilename();
+    const image = document.getElementById("image");
+
+    if (!filename) {
+      document.getElementById("results").style.display = "none";
+      document.getElementById("error-message").style.display = "block";
+    } else {
+      image.src = `/temp/${encodeURIComponent(filename)}`;
+
+      fetch('/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to analyze');
+        }
+
+        const r = data.result;
+        const a = r.answers;
+        const yesCount = r.yes_count;
+        const noCount = r.no_count;
+        const clueBlock = document.getElementById('clues');
+        const summary = document.getElementById('summary');
+
+        let finalVerdict = '';
+        if (yesCount >= 7) finalVerdict = '✅ Checks Out';
+        else if (yesCount >= 4) finalVerdict = '⚠️ Use Caution';
+        else finalVerdict = '❌ Feels Off';
+
+        document.getElementById('verdict').innerHTML = `
+          <h2 style="margin-bottom: 0.5rem;">Result: ${finalVerdict}</h2>
+          <table style="margin: 1rem auto 0; font-size: 0.85rem; border-collapse: collapse; color: #fff;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">Total "Yes"</th>
+                <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">What That Means</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">7–9</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">✅ Checks Out</td></tr>
+              <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">4–6</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">⚠️ Use Caution</td></tr>
+              <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">0–3</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">❌ Feels Off</td></tr>
+            </tbody>
+          </table>`;
+
+        const detailTitle = document.createElement('h3');
+        const arrow = yesCount > noCount ? '←' : yesCount < noCount ? '→' : '↔';
+        detailTitle.textContent = `Additional Details: ✅ (${yesCount}) Yes ${arrow} ❌ (${noCount}) No`;
+        detailTitle.style.textAlign = 'center';
+        detailTitle.style.fontSize = '1.3rem';
+        detailTitle.style.marginBottom = '0.5rem';
+        clueBlock.appendChild(detailTitle);
+
+        const groups = [
+          { key: 'born_real', label: '→ Born Real?' },
+          { key: 'left_untouched', label: '→ Left Untouched?' },
+          { key: 'shared_naturally', label: '→ Shared Naturally?' }
+        ];
+
+        const questionMap = {
+          'born_real': [
+            "Was this photo taken with a real phone or camera?",
+            "Does it still have the original date and time?",
+            "Is the lighting and detail natural?"
+          ],
+          'left_untouched': [
+            "No filters or beauty tools added?",
+            "No cropping or visual editing?",
+            "Has it only been saved once — not re-exported?"
+          ],
+          'shared_naturally': [
+            "Is the original filename still intact?",
+            "Was it not reposted or downloaded from the internet?",
+            "Was it shared directly (like via AirDrop or text)?"
+          ]
+        };
+
+        let index = 1;
+        groups.forEach(group => {
+          const title = document.createElement('h3');
+          title.textContent = group.label;
+          title.style.textAlign = 'center';
+          title.style.marginTop = '1rem';
+          title.style.marginBottom = '0.25rem';
+          clueBlock.appendChild(title);
+
+          const qs = questionMap[group.key];
+          for (let i = 0; i < a[group.key].length; i += 2) {
+            const q = document.createElement('p');
+            q.style.textAlign = 'center';
+            q.style.margin = '0.2rem 0';
+            const question = qs[i / 2];
+            const answer = a[group.key][i + 1] ? '✅ Yes' : '❌ No';
+            q.textContent = `${index}. ${question} → ${answer}`;
+            clueBlock.appendChild(q);
+            index++;
+          }
+        });
+
+        summary.textContent = r.response;
+      })
+      .catch(err => {
+        document.getElementById("results").textContent = "Error loading results.";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>

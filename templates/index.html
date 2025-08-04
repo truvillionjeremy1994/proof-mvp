@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PROOF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #f0f0f0;
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    p.tagline {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .upload-box {
+      border: 2px dashed #555;
+      padding: 3rem;
+      cursor: pointer;
+      margin: 2rem auto 0;
+      max-width: 700px;
+      border-radius: 12px;
+      background: #1a1a1a;
+      transition: border-color 0.3s;
+      text-align: center;
+    }
+
+    .upload-box:hover {
+      border-color: #00aaff;
+    }
+
+    #live-counter {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+
+    .dot {
+      color: #ff4d4d;
+      font-size: 1.2rem;
+      font-weight: bold;
+      animation: blink 2s infinite;
+      filter: drop-shadow(0 0 4px #ff4d4d);
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    #preview-section {
+      display: none;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    #preview-image {
+      max-width: 400px;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .btn-submit {
+      background-color: #2196F3;
+      color: white;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      margin-right: 1rem;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background-color: #f44336;
+      color: white;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    table {
+      margin: 1rem auto;
+      border-collapse: collapse;
+      color: #fff;
+    }
+
+    table, th, td {
+      border: 1px solid #666;
+      padding: 0.5rem 1rem;
+    }
+
+    .section {
+      text-align: left;
+      max-width: 700px;
+      margin: 2rem auto;
+    }
+
+    .section h3 {
+      margin-bottom: 0.3rem;
+    }
+
+    .section p {
+      margin-top: 0.2rem;
+      line-height: 1.6;
+    }
+
+    .group-block {
+      margin-bottom: 1rem;
+    }
+
+    .group-block p {
+      margin: 0.1rem 0;
+    }
+
+    .example-image {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      margin: 1rem auto;
+    }
+
+    @media (max-width: 600px) {
+      .example-image {
+        max-width: 90%;
+        margin: 0.5rem auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>PROOF</h1>
+  <p class="tagline">Upload a photo — See if it ✅ Checks Out or ❌ Feels Off.</p>
+
+  <div id="main-content">
+    <div class="upload-box" onclick="this.querySelector('input').click();">
+      <div style="font-size: 2rem;">📷</div>
+      <div>Upload Photo</div>
+      <input
+        type="file"
+        class="photo-input"
+        accept="image/*"
+        style="display: none"
+        onchange="handleFileUpload(this.files[0])"
+      />
+    </div>
+
+    <div id="live-counter">
+      <h3><span class="dot">●</span> <span id="counter-num">...</span> — Results Issued and Counting!</h3>
+    </div>
+
+    <div class="section" style="text-align: center;">
+      <h2 style="margin-bottom: 0rem;">What is Proof?</h2>
+      <p style="margin-top: 0.5rem;">
+        When you upload a photo, Proof extracts something called <strong>metadata.📚</strong><br>
+        <span style="display:inline-block; margin-top: 0.3rem;">
+          It’s made up of <strong>1’s and 0’s</strong> — invisible digital signals that the human eye can’t see,<br>
+          but together, they tell a unique story about the <strong>image’s journey.🖼️</strong>
+        </span>
+      </p>
+    </div>
+
+    <div class="section" style="margin-top: -1rem; text-align: center;">
+      <img src="/static/uploads/spoof_g_j.jpg" alt="Uploaded Photo" class="example-image">
+    </div>
+
+    <div class="section" style="margin-top: -1.5rem; text-align: center;">
+      <h3>My grandma and I in NYC 🗽</h3>
+      <p>To the human eye, the lighting feels natural, the setting looks real, and nothing seems obviously edited.</p>
+    </div>
+
+    <div class="section" style="margin-top: -1rem; text-align: center;">
+      <h3>What Proof Sees: ❌ Feels Off</h3>
+      <div class="group-block">
+        <p><strong>→ Was it Born Real?</strong></p>
+        <p>1. Was this photo taken with a real phone or camera? → ✅ Yes</p>
+        <p>2. Does it still have the original date and time? → ❌ No</p>
+        <p>3. Is the lighting and detail natural? → ✅ Yes</p>
+      </div>
+      <div class="group-block">
+        <p><strong>→ Was it Left Untouched?</strong></p>
+        <p>4. No filters or beauty tools added? → ✅ Yes</p>
+        <p>5. No cropping or visual editing? → ❌ No</p>
+        <p>6. Has it only been saved once — not re-exported? → ❌ No</p>
+      </div>
+      <div class="group-block">
+        <p><strong>→ Was it Shared Naturally?</strong></p>
+        <p>7. Is the original filename still intact? → ❌ No</p>
+        <p>8. Was it not reposted or downloaded from the internet? → ❌ No</p>
+        <p>9. Was it shared directly (like via AirDrop or text)? → ❌ No</p>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top: -1rem; text-align: center;">
+      <h3>Total: ✅ 3 Yes / ❌ 6 No</h3>
+    </div>
+
+    <div class="section" style="margin-top: -1rem;">
+      <table>
+        <thead>
+          <tr><th>Total "Yes"</th><th>What That Means</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>7–9</td><td>✅ Checks Out</td></tr>
+          <tr><td>4–6</td><td>⚠️ Use Caution</td></tr>
+          <tr><td>0–3</td><td>❌ Feels Off</td></tr>
+        </tbody>
+      </table>
+      <h3>Summary:</h3>
+      <p>While the photo seems real at first glance, the metadata tells another story — signs of edits, multiple saves, and indirect sharing suggest it’s been through a few digital hands.</p>
+
+      <div class="upload-box" onclick="this.querySelector('input').click();">
+        <div style="font-size: 2rem;">📷</div>
+        <div>Upload Photo</div>
+        <input
+          type="file"
+          class="photo-input"
+          accept="image/*"
+          style="display: none"
+          onchange="handleFileUpload(this.files[0])"
+        />
+      </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 3rem; font-size: 0.95rem; color: #999;">
+      contactus@proofme.ai
+    </footer>
+  </div>
+
+  <div id="preview-section" style="display: none; text-align: center; margin-top: 2rem;">
+    <img id="preview-image" style="max-width: 400px; border-radius: 10px; margin-bottom: 1rem;" />
+    <br>
+    <button class="btn-submit" onclick="submitPhoto()">Submit Photo</button>
+    <button class="btn-cancel" onclick="resetUpload()">Cancel</button>
+  </div>
+
+  <script>
+    let uploadedFile = null;
+    let uploadedFileName = null;
+
+    function handleFileUpload(file) {
+      if (!file) return;
+
+      uploadedFileName = file.name;
+      uploadedFile = new FormData();
+      uploadedFile.append("photo", file);
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('preview-section').style.display = 'block';
+
+        const img = document.getElementById('preview-image');
+        if (img) img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function submitPhoto() {
+      if (!uploadedFile || !uploadedFileName) return;
+
+      sessionStorage.setItem("uploadedFilename", uploadedFileName);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: uploadedFile
+      })
+      .then(response => {
+        if (response.redirected) {
+          window.location.href = response.url;
+        } else {
+          alert('Upload failed.');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Something went wrong.');
+      });
+    }
+
+    function resetUpload() {
+      uploadedFile = null;
+      document.querySelectorAll('.photo-input').forEach(input => input.value = '');
+      document.getElementById('main-content').style.display = 'block';
+      document.getElementById('preview-section').style.display = 'none';
+    }
+
+    function updateCounter() {
+      fetch('/count')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('counter-num').textContent = data.count;
+        })
+        .catch(() => {
+          document.getElementById('counter-num').textContent = '...';
+        });
+    }
+
+    updateCounter();
+    setInterval(updateCounter, 5000);
+  </script>
+</body>
+</html>
+
+
+
