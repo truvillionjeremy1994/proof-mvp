@@ -202,7 +202,7 @@
   </div>
 
 <script>
-let uploadedS3Key = null; // Added
+let uploadedS3Key = null;
 let uploadedImageURL = null;
 
 function handleFileUpload(file) {
@@ -226,11 +226,14 @@ function handleFileUpload(file) {
   .then(res => res.json())
   .then(data => {
     uploadedImageURL = data.image_url;
-    uploadedS3Key = data.s3_key; // Store S3 key for /submit
+    uploadedS3Key = data.s3_key;
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('submit-btn').style.opacity = 1;
   })
-  .catch(() => alert('Upload failed.'));
+  .catch(err => {
+    console.error("Upload failed:", err);
+    alert('Upload failed.');
+  });
 }
 
 function submitPhoto() {
@@ -262,7 +265,9 @@ function submitPhoto() {
     document.getElementById('fade').style.opacity = 0;
     setTimeout(() => document.getElementById('fade').style.visibility = 'hidden', 300);
 
-    if (!data.success) throw new Error("Scan failed");
+    if (!data.success || !data.result) {
+      throw new Error(data.error || "Scan failed");
+    }
 
     const r = data.result;
     const a = r.answers;
@@ -284,7 +289,7 @@ function submitPhoto() {
     document.getElementById('verdict').innerHTML = `
       <h2>Result: ${finalVerdict}</h2>
       <table>
-        <thead><tr><th>Total \"Yes\"</th><th>What That Means</th></tr></thead>
+        <thead><tr><th>Total "Yes"</th><th>What That Means</th></tr></thead>
         <tbody>
           <tr><td>7–9</td><td>✅ Checks Out</td></tr>
           <tr><td>4–6</td><td>⚠️ Use Caution</td></tr>
@@ -315,13 +320,36 @@ function submitPhoto() {
   })
   .catch(err => {
     clearInterval(animateDots);
-    console.error(err);
-    alert('Something went wrong.');
+    console.error("GPT Submit Error:", err);
+    alert('Something went wrong during scanning.');
     submitBtn.disabled = false;
     submitBtn.style.opacity = 1;
     submitBtn.textContent = "Submit Photo";
   });
 }
+
+function resetUpload() {
+  uploadedS3Key = null;
+  uploadedImageURL = null;
+  document.querySelectorAll('.photo-input').forEach(input => input.value = '');
+  document.getElementById('main-content').style.display = 'block';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+}
+
+function updateCounter() {
+  fetch('/count')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('counter-num').textContent = data.count;
+    })
+    .catch(() => {
+      document.getElementById('counter-num').textContent = '...';
+    });
+}
+
+updateCounter();
+setInterval(updateCounter, 5000);
 </script>
 </body>
 </html>
