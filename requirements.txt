@@ -2,3 +2,4 @@ flask
 openai
 boto3
 Pillow
+gunicorn
