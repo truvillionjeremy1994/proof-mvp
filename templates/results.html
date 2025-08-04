@@ -84,80 +84,93 @@
     <p>Please try uploading a new photo from the homepage.</p>
   </div>
 
-  <script>
-    const data = JSON.parse(sessionStorage.getItem("scan_result"));
-    if (data && data.result && data.result.url) {
-      const image = document.getElementById('image');
-      image.src = data.result.url;
-      image.onerror = () => {
-        image.alt = "Image could not be loaded.";
-        image.style.display = 'none';
+ <script>
+  const data = JSON.parse(sessionStorage.getItem("scan_result"));
+
+  if (!data || !data.success) {
+    document.getElementById("results").style.display = "none";
+    document.getElementById("error-message").style.display = "block";
+  } else {
+    const r = data.result;
+    const a = r.answers;
+    const yesCount = r.yes_count;
+    const noCount = r.no_count;
+    const clueBlock = document.getElementById('clues');
+    const summary = document.getElementById('summary');
+
+    // ✅ Image load logic
+    const image = document.getElementById('image');
+    const imageUrl = r.url;
+
+    if (imageUrl) {
+      image.src = imageUrl;
+      image.onload = () => {
+        image.style.display = 'block';
       };
-    }
-
-    if (!data || !data.success) {
-      document.getElementById("results").style.display = "none";
-      document.getElementById("error-message").style.display = "block";
+      image.onerror = () => {
+        image.alt = "Image failed to load.";
+        image.style.display = 'none';
+        console.error("❌ Could not load image from URL:", imageUrl);
+      };
     } else {
-      const r = data.result;
-      const a = r.answers;
-      const yesCount = r.yes_count;
-      const noCount = r.no_count;
-      const clueBlock = document.getElementById('clues');
-      const summary = document.getElementById('summary');
-
-      let finalVerdict = '';
-      if (yesCount >= 7) finalVerdict = '✅ Checks Out';
-      else if (yesCount >= 4) finalVerdict = '⚠️ Use Caution';
-      else finalVerdict = '❌ Feels Off';
-
-      document.getElementById('verdict').innerHTML = `
-        <h2 style="margin-bottom: 0.5rem;">Result: ${finalVerdict}</h2>
-        <table style="margin: 1rem auto 0; font-size: 0.85rem; border-collapse: collapse; color: #fff;">
-          <thead>
-            <tr>
-              <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">Total "Yes"</th>
-              <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">What That Means</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">7–9</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">✅ Checks Out</td></tr>
-            <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">4–6</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">⚠️ Use Caution</td></tr>
-            <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">0–3</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">❌ Feels Off</td></tr>
-          </tbody>
-        </table>`;
-
-      const arrow = yesCount > noCount ? '←' : yesCount < noCount ? '→' : '↔';
-      const detailTitle = document.createElement('p');
-      detailTitle.textContent = `Details: ✅ (${yesCount}) Yes ${arrow} ❌ (${noCount}) No`;
-      detailTitle.style.fontWeight = 'bold';
-      clueBlock.appendChild(detailTitle);
-
-      const groups = [
-        { key: 'born_real', label: 'Born Real?' },
-        { key: 'left_untouched', label: 'Left Untouched?' },
-        { key: 'shared_naturally', label: 'Shared Naturally?' }
-      ];
-
-      let index = 1;
-      groups.forEach(group => {
-        const title = document.createElement('p');
-        title.textContent = `→ ${group.label}`;
-        title.style.marginTop = '1rem';
-        title.style.fontWeight = 'bold';
-        clueBlock.appendChild(title);
-
-        const qaPairs = a[group.key] || [];
-        qaPairs.forEach(([question, answer]) => {
-          const q = document.createElement('p');
-          q.style.marginLeft = '1rem';
-          q.textContent = `${index++}. ${question} — ${answer ? '✅ Yes' : '❌ No'}`;
-          clueBlock.appendChild(q);
-        });
-      });
-
-      summary.textContent = r.response;
+      image.alt = "No image URL provided.";
+      image.style.display = 'none';
+      console.warn("⚠️ No image URL found in result.");
     }
-  </script>
+
+    // ✅ Verdict logic
+    let finalVerdict = '';
+    if (yesCount >= 7) finalVerdict = '✅ Checks Out';
+    else if (yesCount >= 4) finalVerdict = '⚠️ Use Caution';
+    else finalVerdict = '❌ Feels Off';
+
+    document.getElementById('verdict').innerHTML = `
+      <h2 style="margin-bottom: 0.5rem;">Result: ${finalVerdict}</h2>
+      <table style="margin: 1rem auto 0; font-size: 0.85rem; border-collapse: collapse; color: #fff;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">Total "Yes"</th>
+            <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">What That Means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">7–9</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">✅ Checks Out</td></tr>
+          <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">4–6</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">⚠️ Use Caution</td></tr>
+          <tr><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">0–3</td><td style="border: 1px solid #444; padding: 0.3rem 0.8rem;">❌ Feels Off</td></tr>
+        </tbody>
+      </table>`;
+
+    const arrow = yesCount > noCount ? '←' : yesCount < noCount ? '→' : '↔';
+    const detailTitle = document.createElement('p');
+    detailTitle.textContent = `Details: ✅ (${yesCount}) Yes ${arrow} ❌ (${noCount}) No`;
+    detailTitle.style.fontWeight = 'bold';
+    clueBlock.appendChild(detailTitle);
+
+    const groups = [
+      { key: 'born_real', label: 'Born Real?' },
+      { key: 'left_untouched', label: 'Left Untouched?' },
+      { key: 'shared_naturally', label: 'Shared Naturally?' }
+    ];
+
+    let index = 1;
+    groups.forEach(group => {
+      const title = document.createElement('p');
+      title.textContent = `→ ${group.label}`;
+      title.style.marginTop = '1rem';
+      title.style.fontWeight = 'bold';
+      clueBlock.appendChild(title);
+
+      const qaPairs = a[group.key] || [];
+      qaPairs.forEach(([question, answer]) => {
+        const q = document.createElement('p');
+        q.style.marginLeft = '1rem';
+        q.textContent = `${index++}. ${question} — ${answer ? '✅ Yes' : '❌ No'}`;
+        clueBlock.appendChild(q);
+      });
+    });
+
+    summary.textContent = r.response;
+  }
+</script>
 </body>
 </html>
