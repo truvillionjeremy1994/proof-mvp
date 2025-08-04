@@ -128,9 +128,8 @@
   </style>
 </head>
 <body>
-<body>
   <div id="fade" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;display:flex;justify-content:center;align-items:center;font-size:1.5rem;z-index:9999;visibility:hidden;opacity:0;transition:opacity 0.3s ease;">
-    <span id="fade-text">Scanning image</span><span id="dots">.</span>
+    <span id="scan-status">Scanning<span id="scan-dots">.</span></span>
   </div>
   <h1>PROOF</h1>
   <p class="tagline">Upload a photo — See if it ✅ Checks Out or ❌ Feels Off.</p>
@@ -220,7 +219,7 @@
   <div id="preview-section" style="display: none; text-align: center; margin-top: 2rem;">
     <img id="preview-image" style="max-width: 400px; border-radius: 10px; margin-bottom: 1rem;" />
     <br>
-    <button class="btn-submit" disabled style="opacity: 0.5;" onclick="submitPhoto()">Submit Photo</button>
+    <button id="submit-btn" class="btn-submit" disabled style="opacity: 0.5;" onclick="submitPhoto()">Submit Photo</button>
     <button class="btn-cancel" onclick="resetUpload()">Cancel</button>
   </div>
 
@@ -266,47 +265,48 @@
   function submitPhoto() {
     if (!uploadedFile || !uploadedFileName || !uploadedImageURL) return;
 
-    const submitBtn = document.querySelector('.btn-submit');
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = 0.5;
-    submitBtn.textContent = "Scanning...";
+  const submitBtn = document.querySelector('.btn-submit');
+  submitBtn.disabled = true;
+  submitBtn.style.opacity = 0.5;
+  submitBtn.innerHTML = `Scanning<span id="scan-dots">.</span>`;
 
-    document.getElementById('fade').classList.add('show');
-    document.getElementById('fade-text').textContent = 'Scanning image';
-    let dotCount = 1;
-    const dotsSpan = document.getElementById('dots');
-    const dotInterval = setInterval(() => {
-      dotCount = (dotCount % 3) + 1;
-      dotsSpan.textContent = '.'.repeat(dotCount);
-    }, 500);
+  let dotCount = 1;
+  const scanDots = document.getElementById('scan-dots');
 
-    const formData = new FormData();
-    formData.append("photo", uploadedFile.get("photo"));
-    formData.append("filename", uploadedFileName);
-    formData.append("url", uploadedImageURL);
+  const animateDots = setInterval(() => {
+    dotCount = (dotCount % 3) + 1;
+    scanDots.textContent = '.'.repeat(dotCount);
+  }, 500);
 
-    fetch('/submit', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      clearInterval(dotInterval);
-      if (!data.success) throw new Error("Scan failed");
-      sessionStorage.setItem("scan_result", JSON.stringify(data));
-      sessionStorage.setItem("image_url", uploadedImageURL);
-      window.location.href = "/results.html";
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Something went wrong.');
-      submitBtn.disabled = false;
-      submitBtn.style.opacity = 1;
-      submitBtn.textContent = "Submit Photo";
-      document.getElementById('fade').classList.remove('show');
-      clearInterval(dotInterval);
-    });
-  }
+  const formData = new FormData();
+  formData.append("photo", uploadedFile.get("photo"));
+  formData.append("filename", uploadedFileName);
+  formData.append("url", uploadedImageURL);
+  document.getElementById('fade').style.visibility = 'visible';
+  document.getElementById('fade').style.opacity = 1;
+
+  fetch('/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    clearInterval(animateDots);
+    if (!data.success) throw new Error("Scan failed");
+    sessionStorage.setItem("scan_result", JSON.stringify(data));
+    sessionStorage.setItem("image_url", uploadedImageURL);
+
+    window.location.href = "/results.html";
+  })
+  .catch(err => {
+    clearInterval(animateDots);
+    console.error(err);
+    alert('Something went wrong.');
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = 1;
+    submitBtn.textContent = "Submit Photo";
+  });
+}
 
   function resetUpload() {
     uploadedFile = null;

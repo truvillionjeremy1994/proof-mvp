@@ -45,6 +45,10 @@
       margin: 2rem auto 0;
       text-align: center;
     }
+    .clue-block {
+      margin-top: 1rem;
+      text-align: left;
+    }
     .clue-block h3 {
       margin: 1rem 0 0.3rem;
     }
@@ -55,28 +59,17 @@
       margin-top: 1.5rem;
       font-size: 1.05rem;
       margin-bottom: 2rem;
-}
-     #fade {
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-#fade.show {
-  visibility: visible;
-  opacity: 1;
+      text-align: left;
     }
   </style>
 </head>
 <body>
-<div id="fade" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;display:flex;justify-content:center;align-items:center;font-size:1.5rem;z-index:9999;visibility:hidden;opacity:0;transition:opacity 0.3s ease;">
-  <span id="fade-text">Scanning image</span><span id="dots">.</span>
-</div>
   <div id="results" class="status">
-    <div id="verdict"></div>
     <img id="image" class="result-image" alt="Uploaded Photo" />
+    <div id="verdict"></div>
     <div class="clue-block" id="clues"></div>
 
-    <div class="summary" style="text-align: left; max-width: 700px; margin: 2rem auto;">
+    <div class="summary">
       <strong style="display: block; margin-bottom: 0;">Summary:</strong>
       <p id="summary" style="margin-top: 0.2rem;"></p>
     </div>
@@ -92,26 +85,6 @@
   </div>
 
   <script>
-    const fade = document.getElementById('fade');
-    fade.classList.add('show');
-
-    const dotsSpan = document.getElementById('dots');
-    let dotCount = 1;
-
-    const dotInterval = setInterval(() => {
-      dotCount = (dotCount % 3) + 1;
-      dotsSpan.textContent = '.'.repeat(dotCount);
-    }, 500);
-
-   setTimeout(() => {
-  document.getElementById('fade-text').textContent = 'Delivering Results';
-}, 5000);
-
-setTimeout(() => {
-  fade.classList.remove('show');
-  clearInterval(dotInterval);
-}, 10000);
-
     const data = JSON.parse(sessionStorage.getItem("scan_result"));
     if (data && data.result && data.result.url) {
       document.getElementById('image').src = data.result.url;
@@ -149,34 +122,30 @@ setTimeout(() => {
           </tbody>
         </table>`;
 
-      const detailTitle = document.createElement('h3');
       const arrow = yesCount > noCount ? '←' : yesCount < noCount ? '→' : '↔';
-      detailTitle.textContent = `Additional Details: ✅ (${yesCount}) Yes ${arrow} ❌ (${noCount}) No`;
-      detailTitle.style.textAlign = 'center';
-      detailTitle.style.fontSize = '1.3rem';
-      detailTitle.style.marginBottom = '0.5rem';
+      const detailTitle = document.createElement('p');
+      detailTitle.textContent = `Details: ✅ (${yesCount}) Yes ${arrow} ❌ (${noCount}) No`;
+      detailTitle.style.fontWeight = 'bold';
       clueBlock.appendChild(detailTitle);
 
       const groups = [
-        { key: 'born_real', label: '→ Born Real?' },
-        { key: 'left_untouched', label: '→ Left Untouched?' },
-        { key: 'shared_naturally', label: '→ Shared Naturally?' }
+        { key: 'born_real', label: 'Born Real?' },
+        { key: 'left_untouched', label: 'Left Untouched?' },
+        { key: 'shared_naturally', label: 'Shared Naturally?' }
       ];
 
       let index = 1;
       groups.forEach(group => {
-        const title = document.createElement('h3');
-        title.textContent = group.label;
-        title.style.textAlign = 'center';
+        const title = document.createElement('p');
+        title.textContent = `→ ${group.label}`;
         title.style.marginTop = '1rem';
-        title.style.marginBottom = '0.25rem';
+        title.style.fontWeight = 'bold';
         clueBlock.appendChild(title);
 
         const qaPairs = a[group.key] || [];
         qaPairs.forEach(([question, answer]) => {
           const q = document.createElement('p');
-          q.style.textAlign = 'center';
-          q.style.margin = '0.2rem 0';
+          q.style.marginLeft = '1rem';
           q.textContent = `${index++}. ${question} → ${answer ? '✅ Yes' : '❌ No'}`;
           clueBlock.appendChild(q);
         });

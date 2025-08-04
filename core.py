@@ -76,29 +76,25 @@ def submit_file():
 
     metadata = extract_metadata(file.stream)
 
-    prompt = f"""You're part of a system that interprets image metadata using a fixed 9-question yes/no framework.
-Use this structure:
+    prompt = f"""You're part of a system that helps interpret image metadata for educational purposes.
+Use this format to organize your response:
 
 → Born Real?
-1⃣ Was this photo taken with a real phone or camera?
-2⃣ Does it still have the original date and time?
-3⃣ Is the lighting and detail natural?
+1. Was this photo taken with a real phone or camera?
+2. Does it still have the original date and time?
+3. Is the lighting and detail natural?
 
 → Left Untouched?
-4⃣ No filters or beauty tools added?
-5⃣ No cropping or visual editing?
-6⃣ Has it only been saved once — not re-exported?
+4. No filters or beauty tools added?
+5. No cropping or visual editing?
+6. Has it only been saved once — not re-exported?
 
 → Shared Naturally?
-7⃣ Is the original filename still intact?
-8⃣ Was it not reposted or downloaded from the internet?
-9⃣ Was it shared directly (like via AirDrop or text)?
+7. Is the original filename still intact?
+8. Was it not reposted or downloaded from the internet?
+9. Was it shared directly (like via AirDrop or text)?
 
-Respond exactly like this:
-→ Born Real?
-1⃣ Question → ✅ Yes / ❌ No
-...
-Summary: [brief summary based on metadata]
+Respond YES or NO to each question, followed by one short, clear summary (30 words or less) written in a human tone.
 
 Metadata:
 {json.dumps(metadata, indent=2)}
@@ -129,6 +125,7 @@ Metadata:
         "→ Shared Naturally?": "shared_naturally"
     }
 
+    summary_lines = []
     for line in lines:
         line = line.strip()
         if line in group_map:
@@ -138,13 +135,18 @@ Metadata:
             if len(parts) == 2:
                 question = parts[0].strip()
                 answer = parts[1].strip()
-                answers[current_group].append([question, answer == '✅ Yes'])
+                is_yes = 'yes' in answer.lower()
+                answers[current_group].append([question, is_yes])
+        elif line.startswith("Summary:"):
+            summary_lines.append(line)
+
+    summary_text = summary_lines[-1][len("Summary:"):].strip() if summary_lines else ""
 
     result = {
         "answers": answers,
         "yes_count": full_story_output.count("✅ Yes"),
         "no_count": full_story_output.count("❌ No"),
-        "response": full_story_output.strip(),
+        "response": summary_text,
         "filename": filename,
         "url": s3_url
     }
