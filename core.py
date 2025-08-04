@@ -4,15 +4,15 @@ import uuid
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from datetime import datetime
-import openai
+from openai import OpenAI
 import boto3
 from PIL import Image
 from PIL.ExifTags import TAGS
 
 app = Flask(__name__)
 
-# Load OpenAI key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # S3 config
 s3 = boto3.client('s3',
@@ -21,7 +21,6 @@ s3 = boto3.client('s3',
     region_name=os.getenv("AWS_REGION")
 )
 BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
-
 
 def extract_metadata(file_stream):
     try:
@@ -34,7 +33,6 @@ def extract_metadata(file_stream):
         return metadata
     except Exception as e:
         return {"error": str(e)}
-
 
 def save_json_to_s3(data, filename_prefix):
     timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
@@ -50,7 +48,6 @@ def save_json_to_s3(data, filename_prefix):
         ContentType='application/json'
     )
 
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'photo' not in request.files:
@@ -59,23 +56,16 @@ def upload_file():
     file = request.files['photo']
     filename = secure_filename(file.filename)
 
-    # Upload to S3 under the "temp/" prefix
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=f"temp/{filename}",
         Body=file,
         ContentType=file.content_type,
-        ACL='public-read'  # Make it visible in browser
+        ACL='public-read'
     )
 
-    # Build the S3 public URL
     s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/temp/{filename}"
-
-    return jsonify({
-        "filename": filename,
-        "url": s3_url
-    })
-
+    return jsonify({"filename": filename, "url": s3_url})
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
@@ -112,7 +102,7 @@ Metadata:
 {json.dumps(metadata, indent=2)}
 """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a metadata interpreter."},
@@ -120,7 +110,7 @@ Metadata:
         ]
     )
 
-    full_story_output = response['choices'][0]['message']['content']
+    full_story_output = response.choices[0].message.content
     filename_prefix = filename.rsplit('.', 1)[0]
 
     result = {
@@ -136,16 +126,9 @@ Metadata:
         "url": s3_url
     }
 
-    save_json_to_s3({
-        "filename": filename,
-        "result": result
-    }, filename_prefix)
+    save_json_to_s3({"filename": filename, "result": result}, filename_prefix)
 
-    return jsonify({
-        "success": True,
-        "result": result
-    })
-
+    return jsonify({"success": True, "result": result})
 
 @app.route('/count', methods=['GET'])
 def count():
@@ -158,16 +141,13 @@ def count():
         print("Error in /count:", e)
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     return send_from_directory('static', filename)
 
-
 @app.route('/')
 def index():
     return send_from_directory('templates', 'index.html')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
