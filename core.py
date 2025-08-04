@@ -149,5 +149,9 @@ def serve_file(filename):
 def index():
     return send_from_directory('templates', 'index.html')
 
+@app.route('/results.html')
+def results_page():
+    return send_from_directory('templates', 'results.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
