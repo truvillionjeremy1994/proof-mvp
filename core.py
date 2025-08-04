@@ -53,15 +53,13 @@ def upload_file():
         return "No photo uploaded", 400
     file = request.files['photo']
     filename = secure_filename(file.filename)
-
-    s3_key = f"temp/{filename}"
+    s3_key = f"temp/{uuid.uuid4()}_{filename}"
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=s3_key,
         Body=file,
         ContentType=file.content_type
     )
-
     s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_key}"
     return jsonify({"filename": filename, "image_url": s3_url, "s3_key": s3_key})
 
@@ -123,26 +121,22 @@ Metadata:
             print("❌ GPT JSON Decode Error")
             print("🔎 Raw content returned from GPT:")
             print(content)
-
             save_json_to_s3({
                 "error": "Invalid JSON from GPT",
                 "raw_response": content,
                 "s3_key": s3_key,
                 "metadata": metadata
             }, f"{s3_key.rsplit('/',1)[-1].rsplit('.',1)[0]}_invalid_json")
-
             return jsonify({"success": False, "error": "Invalid JSON from GPT"}), 500
 
         result_json["answers"] = {
-            "born_real": result_json["born_real"],
-            "left_untouched": result_json["left_untouched"],
-            "shared_naturally": result_json["shared_naturally"]
+            "born_real": result_json.get("born_real", []),
+            "left_untouched": result_json.get("left_untouched", []),
+            "shared_naturally": result_json.get("shared_naturally", [])
         }
 
         result_json["s3_key"] = s3_key
-
         save_json_to_s3({"s3_key": s3_key, "result": result_json}, s3_key.rsplit("/", 1)[-1].rsplit(".", 1)[0])
-
         return jsonify({"success": True, "result": result_json})
 
     except Exception as e:
