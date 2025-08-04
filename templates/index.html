@@ -131,6 +131,56 @@
       <h3>My grandma and I in NYC 🗽</h3>
       <p>To the human eye, the lighting feels natural, the setting looks real, and nothing seems obviously edited.</p>
     </div>
+<div class="section" style="margin-top: -1rem; text-align: left; max-width: 700px; margin-left: auto; margin-right: auto;">
+      <h3>What Proof Sees: ❌ Feels Off</h3>
+      <div class="group-block">
+        <p><strong>→ Was it Born Real?</strong></p>
+        <p>1. Was this photo taken with a real phone or camera? → ✅ Yes</p>
+        <p>2. Does it still have the original date and time? → ❌ No</p>
+        <p>3. Is the lighting and detail natural? → ✅ Yes</p>
+      </div>
+      <div class="group-block">
+        <p><strong>→ Was it Left Untouched?</strong></p>
+        <p>4. No filters or beauty tools added? → ✅ Yes</p>
+        <p>5. No cropping or visual editing? → ❌ No</p>
+        <p>6. Has it only been saved once — not re-exported? → ❌ No</p>
+      </div>
+      <div class="group-block">
+        <p><strong>→ Was it Shared Naturally?</strong></p>
+        <p>7. Is the original filename still intact? → ❌ No</p>
+        <p>8. Was it not reposted or downloaded from the internet? → ❌ No</p>
+        <p>9. Was it shared directly (like via AirDrop or text)? → ❌ No</p>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top: -1rem; text-align: center;">
+      <h3>Total: ✅ 3 Yes / ❌ 6 No</h3>
+    </div>
+
+    <div class="section" style="margin-top: -1rem;">
+      <table>
+        <thead>
+          <tr><th>Total "Yes"</th><th>What That Means</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>7–9</td><td>✅ Checks Out</td></tr>
+          <tr><td>4–6</td><td>⚠️ Use Caution</td></tr>
+          <tr><td>0–3</td><td>❌ Feels Off</td></tr>
+        </tbody>
+      </table>
+      <h3>Summary:</h3>
+      <p>While the photo seems real at first glance, the metadata tells another story — signs of edits, multiple saves, and indirect sharing suggest it’s been through a few digital hands.</p>
+
+      <div class="upload-box" onclick="this.querySelector('input').click();">
+        <div style="font-size: 2rem;">📷</div>
+        <div>Upload Photo</div>
+        <input type="file" class="photo-input" accept="image/*" style="display: none" onchange="handleFileUpload(this.files[0])" />
+      </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 3rem; font-size: 0.95rem; color: #999;">
+      contactus@proofme.ai
+    </footer>
   </div>
 
   <div id="preview-section" style="display:none; text-align:center;">

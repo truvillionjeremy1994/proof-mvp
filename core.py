@@ -69,7 +69,7 @@ def submit_file():
     s3_url = request.form.get('url')
 
     if not file or not filename:
-        return jsonify({"error": "Missing file or filename"}), 400
+        return jsonify({"success": False, "error": "Missing file or filename"}), 400
 
     metadata = extract_metadata(file.stream)
 
@@ -113,8 +113,9 @@ Metadata:
     try:
         result_json = json.loads(content)
     except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON returned from GPT"}), 500
+        return jsonify({"success": False, "error": "Invalid JSON returned from GPT"}), 500
 
+    # Normalize structure for frontend
     result_json["answers"] = {
         "born_real": result_json.pop("born_real", []),
         "left_untouched": result_json.pop("left_untouched", []),
@@ -125,6 +126,7 @@ Metadata:
     result_json["url"] = s3_url
 
     save_json_to_s3({"filename": filename, "result": result_json}, filename.rsplit(".", 1)[0])
+
     return jsonify({"success": True, "result": result_json})
 
 @app.route('/count', methods=['GET'])
