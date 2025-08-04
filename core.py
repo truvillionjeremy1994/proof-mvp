@@ -59,8 +59,7 @@ def upload_file():
         Bucket=BUCKET_NAME,
         Key=f"temp/{filename}",
         Body=file,
-        ContentType=file.content_type,
-        ACL='public-read'
+        ContentType=file.content_type
     )
 
     s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/temp/{filename}"
