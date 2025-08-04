@@ -11,19 +11,16 @@
       font-family: system-ui, sans-serif;
       padding: 2rem;
     }
-
     h1 {
       font-size: 2.5rem;
       margin-bottom: 0.5rem;
       text-align: center;
     }
-
     p.tagline {
       font-size: 1.2rem;
       text-align: center;
       margin-bottom: 2rem;
     }
-
     .upload-box {
       border: 2px dashed #555;
       padding: 3rem;
@@ -35,18 +32,15 @@
       transition: border-color 0.3s;
       text-align: center;
     }
-
     .upload-box:hover {
       border-color: #00aaff;
     }
-
     #live-counter {
       text-align: center;
       font-size: 1rem;
       font-weight: bold;
       margin-top: 0.5rem;
     }
-
     .dot {
       color: #ff4d4d;
       font-size: 1.2rem;
@@ -54,27 +48,23 @@
       animation: blink 2s infinite;
       filter: drop-shadow(0 0 4px #ff4d4d);
     }
-
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
-
     #preview-section {
       display: none;
       text-align: center;
       margin-top: 2rem;
     }
-
-  #preview-image {
-  width: 100%;
-  max-width: 90vw;   /* Responsive on mobile */
-  height: auto;
-  border-radius: 10px;
-  display: block;
-  margin: 0 auto 1rem;
-}
-
+    #preview-image {
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto 1rem;
+    }
     .btn-submit {
       background-color: #2196F3;
       color: white;
@@ -85,7 +75,6 @@
       margin-right: 1rem;
       cursor: pointer;
     }
-
     .btn-cancel {
       background-color: #f44336;
       color: white;
@@ -95,41 +84,33 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     table {
       margin: 1rem auto;
       border-collapse: collapse;
       color: #fff;
     }
-
     table, th, td {
       border: 1px solid #666;
       padding: 0.5rem 1rem;
     }
-
     .section {
       text-align: left;
       max-width: 700px;
       margin: 2rem auto;
     }
-
     .section h3 {
       margin-bottom: 0.3rem;
     }
-
     .section p {
       margin-top: 0.2rem;
       line-height: 1.6;
     }
-
     .group-block {
       margin-bottom: 1rem;
     }
-
     .group-block p {
       margin: 0.1rem 0;
     }
-
     .example-image {
       width: 100%;
       max-width: 400px;
@@ -138,7 +119,6 @@
       display: block;
       margin: 1rem auto;
     }
-
     @media (max-width: 600px) {
       .example-image {
         max-width: 90%;
@@ -155,20 +135,13 @@
     <div class="upload-box" onclick="this.querySelector('input').click();">
       <div style="font-size: 2rem;">📷</div>
       <div>Upload Photo</div>
-      <input
-        type="file"
-        class="photo-input"
-        accept="image/*"
-        style="display: none"
-        onchange="handleFileUpload(this.files[0])"
-      />
+      <input type="file" class="photo-input" accept="image/*" style="display: none" onchange="handleFileUpload(this.files[0])" />
     </div>
-
     <div id="live-counter">
       <h3><span class="dot">●</span> <span id="counter-num">...</span> — Results Issued and Counting!</h3>
     </div>
 
-    <div class="section" style="text-align: center;">
+    <div class="section" style="text-align: left; max-width: 700px; margin-left: auto; margin-right: auto;">
       <h2 style="margin-bottom: 0rem;">What is Proof?</h2>
       <p style="margin-top: 0.5rem;">
         When you upload a photo, Proof extracts something called <strong>metadata.📚</strong><br>
@@ -188,7 +161,7 @@
       <p>To the human eye, the lighting feels natural, the setting looks real, and nothing seems obviously edited.</p>
     </div>
 
-    <div class="section" style="margin-top: -1rem; text-align: center;">
+    <div class="section" style="margin-top: -1rem; text-align: left; max-width: 700px; margin-left: auto; margin-right: auto;">
       <h3>What Proof Sees: ❌ Feels Off</h3>
       <div class="group-block">
         <p><strong>→ Was it Born Real?</strong></p>
@@ -231,13 +204,7 @@
       <div class="upload-box" onclick="this.querySelector('input').click();">
         <div style="font-size: 2rem;">📷</div>
         <div>Upload Photo</div>
-        <input
-          type="file"
-          class="photo-input"
-          accept="image/*"
-          style="display: none"
-          onchange="handleFileUpload(this.files[0])"
-        />
+        <input type="file" class="photo-input" accept="image/*" style="display: none" onchange="handleFileUpload(this.files[0])" />
       </div>
     </div>
 
@@ -275,27 +242,28 @@
       reader.readAsDataURL(file);
     }
 
-function submitPhoto() {
-  if (!uploadedFile || !uploadedFileName) return;
+    function submitPhoto() {
+      if (!uploadedFile || !uploadedFileName) return;
 
-  const formData = new FormData();
-  formData.append("photo", uploadedFile.get("photo"));   // send the actual image
-  formData.append("filename", uploadedFileName);         // send filename for logging
+      const formData = new FormData();
+      formData.append("photo", uploadedFile.get("photo"));
+      formData.append("filename", uploadedFileName);
 
-  fetch('/submit', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-     sessionStorage.setItem("scan_result", JSON.stringify(data));
-    window.location.href = "/results.html";
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Something went wrong.');
-  });
-}
+      fetch('/submit', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        sessionStorage.setItem("scan_result", JSON.stringify(data));
+        window.location.href = "/results.html";
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Something went wrong.');
+      });
+    }
+
     function resetUpload() {
       uploadedFile = null;
       document.querySelectorAll('.photo-input').forEach(input => input.value = '');
@@ -319,6 +287,3 @@ function submitPhoto() {
   </script>
 </body>
 </html>
-
-
-

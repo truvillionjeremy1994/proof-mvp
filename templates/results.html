@@ -13,30 +13,26 @@
       max-width: 800px;
       margin: auto;
     }
-
     h2 {
       font-size: 1.8rem;
       text-align: center;
       margin-bottom: 1rem;
     }
-
     .result-image {
       width: 100%;
-      max-width: 400px;
+      max-width: 360px;
       height: auto;
       object-fit: contain;
       border-radius: 10px;
       display: block;
       margin: 1rem auto;
     }
-
     .status {
       background: #222;
       padding: 1.5rem;
       border-radius: 10px;
       font-size: 1rem;
     }
-
     .btn-blue {
       background-color: #2196F3;
       color: white;
@@ -47,22 +43,19 @@
       cursor: pointer;
       display: block;
       margin: 2rem auto 0;
+      text-align: center;
     }
-
     .clue-block h3 {
       margin: 1rem 0 0.3rem;
     }
-
     .clue-block p {
       margin: 0.2rem 0;
     }
-
     .summary {
       margin-top: 1.5rem;
       font-size: 1.05rem;
       margin-bottom: 2rem;
     }
-
     #fade {
       position: fixed;
       top: 0;
@@ -80,7 +73,6 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-
     #fade.show {
       visibility: visible;
       opacity: 1;
@@ -92,15 +84,17 @@
 
   <div id="results" class="status">
     <div id="verdict"></div>
-    <img id="image" class="result-image" src="/static/spoof_g_j.jpg" alt="Uploaded Photo" />
+    <img id="image" class="result-image" alt="Uploaded Photo" />
     <div class="clue-block" id="clues"></div>
 
-    <div class="summary">
+    <div class="summary" style="text-align: left; max-width: 700px; margin: 2rem auto;">
       <strong style="display: block; margin-bottom: 0;">Summary:</strong>
       <p id="summary" style="margin-top: 0.2rem;"></p>
     </div>
 
-    <button class="btn-blue" onclick="location.href='/'">Scan Another Photo</button>
+    <div style="text-align: center; max-width: 700px; margin: 0 auto;">
+      <button class="btn-blue" onclick="location.href='/'">Scan Another Photo</button>
+    </div>
   </div>
 
   <div id="error-message" style="display: none; text-align: center; margin-top: 2rem;">
@@ -128,6 +122,9 @@
     }, 10000);
 
     const data = JSON.parse(sessionStorage.getItem("scan_result"));
+    if (data && data.result && data.result.url) {
+      document.getElementById('image').src = data.result.url;
+    }
 
     if (!data || !data.success) {
       document.getElementById("results").style.display = "none";

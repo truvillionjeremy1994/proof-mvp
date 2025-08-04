@@ -22,6 +22,7 @@ s3 = boto3.client('s3',
 )
 BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
 
+
 def extract_metadata(file_stream):
     try:
         image = Image.open(file_stream)
@@ -33,6 +34,7 @@ def extract_metadata(file_stream):
         return metadata
     except Exception as e:
         return {"error": str(e)}
+
 
 def save_json_to_s3(data, filename_prefix):
     timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
@@ -48,18 +50,38 @@ def save_json_to_s3(data, filename_prefix):
         ContentType='application/json'
     )
 
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'photo' not in request.files:
         return "No photo uploaded", 400
+
     file = request.files['photo']
     filename = secure_filename(file.filename)
-    return jsonify({"filename": filename})
+
+    # Upload to S3 under the "temp/" prefix
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=f"temp/{filename}",
+        Body=file,
+        ContentType=file.content_type,
+        ACL='public-read'  # Make it visible in browser
+    )
+
+    # Build the S3 public URL
+    s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/temp/{filename}"
+
+    return jsonify({
+        "filename": filename,
+        "url": s3_url
+    })
+
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
     filename = request.form.get('filename')
     file = request.files.get('photo')
+    s3_url = request.form.get('url')
 
     if not file or not filename:
         return jsonify({"error": "Missing file or filename"}), 400
@@ -70,19 +92,19 @@ def submit_file():
 Use this structure:
 
 → Born Real?
-1️⃣ Was this photo taken with a real phone or camera?
-2️⃣ Does it still have the original date and time?
-3️⃣ Is the lighting and detail natural?
+1⃣ Was this photo taken with a real phone or camera?
+2⃣ Does it still have the original date and time?
+3⃣ Is the lighting and detail natural?
 
 → Left Untouched?
-4️⃣ No filters or beauty tools added?
-5️⃣ No cropping or visual editing?
-6️⃣ Has it only been saved once — not re-exported?
+4⃣ No filters or beauty tools added?
+5⃣ No cropping or visual editing?
+6⃣ Has it only been saved once — not re-exported?
 
 → Shared Naturally?
-7️⃣ Is the original filename still intact?
-8️⃣ Was it not reposted or downloaded from the internet?
-9️⃣ Was it shared directly (like via AirDrop or text)?
+7⃣ Is the original filename still intact?
+8⃣ Was it not reposted or downloaded from the internet?
+9⃣ Was it shared directly (like via AirDrop or text)?
 
 Respond YES or NO to each. Then summarize in 30 words or less — not a judgment — just describe the photo's clarity based on metadata alone.
 
@@ -109,7 +131,9 @@ Metadata:
         },
         "yes_count": full_story_output.count("✅ Yes"),
         "no_count": full_story_output.count("❌ No"),
-        "response": full_story_output.strip()
+        "response": full_story_output.strip(),
+        "filename": filename,
+        "url": s3_url
     }
 
     save_json_to_s3({
@@ -122,6 +146,7 @@ Metadata:
         "result": result
     })
 
+
 @app.route('/count', methods=['GET'])
 def count():
     try:
@@ -133,13 +158,16 @@ def count():
         print("Error in /count:", e)
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     return send_from_directory('static', filename)
 
+
 @app.route('/')
 def index():
     return send_from_directory('templates', 'index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
