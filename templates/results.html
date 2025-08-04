@@ -87,7 +87,13 @@
   <script>
     const data = JSON.parse(sessionStorage.getItem("scan_result"));
     if (data && data.result && data.result.url) {
-      document.getElementById('image').src = data.result.url;
+      const image = document.getElementById('image');
+      image.src = data.result.url;
+      image.onerror = () => {
+      image.alt = "Image could not be loaded.";
+      image.style.display = 'none';
+    };
+
     }
 
     if (!data || !data.success) {
