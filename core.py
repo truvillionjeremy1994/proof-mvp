@@ -35,7 +35,7 @@ def extract_metadata(file_stream):
 
 def save_json_to_s3(data, filename_prefix):
     timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
-    filename = f"{filename_prefix}_{timestamp}.json"
+    filename = f"logs/{filename_prefix}_{timestamp}.json"
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=filename,
