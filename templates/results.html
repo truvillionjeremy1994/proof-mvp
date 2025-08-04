@@ -181,7 +181,7 @@
         title.style.marginBottom = '0.25rem';
         clueBlock.appendChild(title);
 
-        const qaPairs = a[group.key];
+        const qaPairs = a[group.key] || [];
         qaPairs.forEach(([question, answer]) => {
           const q = document.createElement('p');
           q.style.textAlign = 'center';
