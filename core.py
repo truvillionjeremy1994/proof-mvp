@@ -1,7 +1,6 @@
 import os
 import json
 import uuid
-import re
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -11,7 +10,6 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 
 app = Flask(__name__)
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 s3 = boto3.client('s3',
@@ -39,7 +37,6 @@ def save_json_to_s3(data, filename_prefix):
     data["timestamp"] = timestamp
     data["session_id"] = session_id
     filename = f"logs/{filename_prefix}_{timestamp}.json"
-
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=filename,
@@ -51,18 +48,18 @@ def save_json_to_s3(data, filename_prefix):
 def upload_file():
     if 'photo' not in request.files:
         return "No photo uploaded", 400
-
     file = request.files['photo']
     filename = secure_filename(file.filename)
 
+    s3_key = f"temp/{filename}"
     s3.put_object(
         Bucket=BUCKET_NAME,
-        Key=f"temp/{filename}",
+        Key=s3_key,
         Body=file,
         ContentType=file.content_type
     )
 
-    s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/temp/{filename}"
+    s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_key}"
     return jsonify({"filename": filename, "url": s3_url})
 
 @app.route('/submit', methods=['POST'])
@@ -76,8 +73,12 @@ def submit_file():
 
     metadata = extract_metadata(file.stream)
 
-    prompt = f"""You're part of a system that helps interpret image metadata for educational purposes.
-Use this format to organize your response:
+    system_prompt = """
+Return only valid JSON. Do not explain anything. Group exactly 9 questions into 3 labeled sections: 'born_real', 'left_untouched', and 'shared_naturally'. Each section must include exactly 3 items, formatted as [question_text, true|false]. Also include: final_verdict (emoji + text), yes_count (0–9), no_count (0–9), and a response that’s short, neutral, and clearly understandable by both a 5-year-old and a 95-year-old. Speak like you're explaining something to someone you love. JSON only. No markdown. No extra commentary.
+"""
+
+    user_prompt = f"""
+Use the metadata below to answer the following 9 questions.
 
 → Born Real?
 1. Was this photo taken with a real phone or camera?
@@ -94,7 +95,7 @@ Use this format to organize your response:
 8. Was it not reposted or downloaded from the internet?
 9. Was it shared directly (like via AirDrop or text)?
 
-Respond YES or NO to each question, followed by one short, clear summary (30 words or less) written in a human tone.
+Respond only in JSON using the required format.
 
 Metadata:
 {json.dumps(metadata, indent=2)}
@@ -103,57 +104,22 @@ Metadata:
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are a metadata interpreter."},
-            {"role": "user", "content": prompt}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
         ]
     )
 
-    full_story_output = response.choices[0].message.content
-    filename_prefix = filename.rsplit('.', 1)[0]
+    content = response.choices[0].message.content.strip()
+    try:
+        result_json = json.loads(content)
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid JSON returned from GPT"}), 500
 
-    answers = {
-        "born_real": [],
-        "left_untouched": [],
-        "shared_naturally": []
-    }
+    result_json["filename"] = filename
+    result_json["url"] = s3_url
 
-    lines = full_story_output.splitlines()
-    current_group = None
-    group_map = {
-        "→ Born Real?": "born_real",
-        "→ Left Untouched?": "left_untouched",
-        "→ Shared Naturally?": "shared_naturally"
-    }
-
-    summary_lines = []
-    for line in lines:
-        line = line.strip()
-        if line in group_map:
-            current_group = group_map[line]
-        elif current_group and '→' in line:
-            parts = line.split('→')
-            if len(parts) == 2:
-                question = parts[0].strip()
-                answer = parts[1].strip()
-                is_yes = 'yes' in answer.lower()
-                answers[current_group].append([question, is_yes])
-        elif line.startswith("Summary:"):
-            summary_lines.append(line)
-
-    summary_text = summary_lines[-1][len("Summary:"):].strip() if summary_lines else ""
-
-    result = {
-        "answers": answers,
-        "yes_count": full_story_output.count("✅ Yes"),
-        "no_count": full_story_output.count("❌ No"),
-        "response": summary_text,
-        "filename": filename,
-        "url": s3_url
-    }
-
-    save_json_to_s3({"filename": filename, "result": result}, filename_prefix)
-
-    return jsonify({"success": True, "result": result})
+    save_json_to_s3({"filename": filename, "result": result_json}, filename.rsplit(".", 1)[0])
+    return jsonify({"success": True, "result": result_json})
 
 @app.route('/count', methods=['GET'])
 def count():
@@ -163,7 +129,6 @@ def count():
         json_files = [f for f in files if f['Key'].endswith('.json')]
         return jsonify({"count": len(json_files)})
     except Exception as e:
-        print("Error in /count:", e)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')

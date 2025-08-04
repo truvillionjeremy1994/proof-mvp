@@ -90,10 +90,9 @@
       const image = document.getElementById('image');
       image.src = data.result.url;
       image.onerror = () => {
-      image.alt = "Image could not be loaded.";
-      image.style.display = 'none';
-    };
-
+        image.alt = "Image could not be loaded.";
+        image.style.display = 'none';
+      };
     }
 
     if (!data || !data.success) {
@@ -117,7 +116,7 @@
         <table style="margin: 1rem auto 0; font-size: 0.85rem; border-collapse: collapse; color: #fff;">
           <thead>
             <tr>
-              <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">Total \"Yes\"</th>
+              <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">Total "Yes"</th>
               <th style="border: 1px solid #444; padding: 0.3rem 0.8rem;">What That Means</th>
             </tr>
           </thead>
@@ -152,7 +151,7 @@
         qaPairs.forEach(([question, answer]) => {
           const q = document.createElement('p');
           q.style.marginLeft = '1rem';
-          q.textContent = `${index++}. ${question} → ${answer ? '✅ Yes' : '❌ No'}`;
+          q.textContent = `${index++}. ${question} — ${answer ? '✅ Yes' : '❌ No'}`;
           clueBlock.appendChild(q);
         });
       });
