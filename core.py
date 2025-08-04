@@ -115,6 +115,12 @@ Metadata:
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON returned from GPT"}), 500
 
+    result_json["answers"] = {
+        "born_real": result_json.pop("born_real", []),
+        "left_untouched": result_json.pop("left_untouched", []),
+        "shared_naturally": result_json.pop("shared_naturally", [])
+    }
+
     result_json["filename"] = filename
     result_json["url"] = s3_url
 
