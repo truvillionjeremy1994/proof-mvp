@@ -10,80 +10,55 @@
       color: #f0f0f0;
       font-family: system-ui, sans-serif;
       padding: 2rem;
+      max-width: 800px;
+      margin: auto;
     }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
+    h1, h2 {
       text-align: center;
-    }
-    p.tagline {
-      font-size: 1.2rem;
-      text-align: center;
-      margin-bottom: 2rem;
     }
     .upload-box {
       border: 2px dashed #555;
       padding: 3rem;
       cursor: pointer;
-      margin: 2rem auto 0;
       max-width: 700px;
       border-radius: 12px;
       background: #1a1a1a;
       transition: border-color 0.3s;
       text-align: center;
+      margin: 2rem auto 0;
     }
     .upload-box:hover {
       border-color: #00aaff;
     }
-    #live-counter {
-      text-align: center;
+    .btn-submit, .btn-cancel, .btn-blue {
+      padding: 0.8rem 2rem;
       font-size: 1rem;
-      font-weight: bold;
-      margin-top: 0.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 1rem 0.5rem;
     }
-    .dot {
-      color: #ff4d4d;
-      font-size: 1.2rem;
-      font-weight: bold;
-      animation: blink 2s infinite;
-      filter: drop-shadow(0 0 4px #ff4d4d);
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    #preview-section {
-      display: none;
-      text-align: center;
-      margin-top: 2rem;
-    }
-    #preview-image {
+    .btn-submit { background-color: #2196F3; color: white; }
+    .btn-cancel { background-color: #f44336; color: white; }
+    .btn-blue { background-color: #2196F3; color: white; display: block; margin: 2rem auto; }
+
+    .example-image, .result-image, #preview-image {
       width: 100%;
-      max-width: 360px;
-      height: auto;
+      max-width: 400px;
       border-radius: 10px;
       display: block;
-      margin: 0 auto 1rem;
+      margin: 1rem auto;
     }
-    .btn-submit {
-      background-color: #2196F3;
-      color: white;
-      padding: 0.8rem 2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      margin-right: 1rem;
-      cursor: pointer;
+
+    .section {
+      margin: 2rem auto;
+      max-width: 700px;
     }
-    .btn-cancel {
-      background-color: #f44336;
-      color: white;
-      padding: 0.8rem 2rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    .section p { line-height: 1.6; }
+
+    .group-block { margin-bottom: 1rem; }
+    .group-block p { margin: 0.1rem 0; }
+
     table {
       margin: 1rem auto;
       border-collapse: collapse;
@@ -93,46 +68,46 @@
       border: 1px solid #666;
       padding: 0.5rem 1rem;
     }
-    .section {
-      text-align: left;
-      max-width: 700px;
-      margin: 2rem auto;
+
+    #live-counter {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 0.5rem;
     }
-    .section h3 {
-      margin-bottom: 0.3rem;
+
+    .dot {
+      color: #ff4d4d;
+      font-weight: bold;
+      animation: blink 2s infinite;
     }
-    .section p {
-      margin-top: 0.2rem;
-      line-height: 1.6;
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
-    .group-block {
-      margin-bottom: 1rem;
-    }
-    .group-block p {
-      margin: 0.1rem 0;
-    }
-    .example-image {
-      width: 100%;
-      max-width: 400px;
-      height: auto;
-      border-radius: 10px;
-      display: block;
-      margin: 1rem auto;
-    }
-    @media (max-width: 600px) {
-      .example-image {
-        max-width: 90%;
-        margin: 0.5rem auto;
-      }
+
+    #fade {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: black;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      z-index: 9999;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
   </style>
 </head>
 <body>
-  <div id="fade" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;display:flex;justify-content:center;align-items:center;font-size:1.5rem;z-index:9999;visibility:hidden;opacity:0;transition:opacity 0.3s ease;">
-    <span id="scan-status">Scanning<span id="scan-dots">.</span></span>
-  </div>
+  <div id="fade"><span id="scan-status">Scanning<span id="scan-dots">.</span></span></div>
+
   <h1>PROOF</h1>
-  <p class="tagline">Upload a photo — See if it ✅ Checks Out or ❌ Feels Off.</p>
+  <p class="tagline" style="text-align:center;">Upload a photo — See if it ✅ Checks Out or ❌ Feels Off.</p>
 
   <div id="main-content">
     <div class="upload-box" onclick="this.querySelector('input').click();">
@@ -144,135 +119,87 @@
       <h3><span class="dot">●</span> <span id="counter-num">...</span> — Results Issued and Counting!</h3>
     </div>
 
-    <div class="section" style="text-align: left; max-width: 700px; margin-left: auto; margin-right: auto;">
-      <h2 style="margin-bottom: 0rem;">What is Proof?</h2>
-      <p style="margin-top: 0.5rem;">
-        When you upload a photo, Proof extracts something called <strong>metadata.📚</strong><br>
-        <span style="display:inline-block; margin-top: 0.3rem;">
-          It’s made up of <strong>1’s and 0’s</strong> — invisible digital signals that the human eye can’t see,<br>
-          but together, they tell a unique story about the <strong>image’s journey.🖼️</strong>
-        </span>
-      </p>
+    <div class="section">
+      <h2>What is Proof?</h2>
+      <p>When you upload a photo, Proof extracts something called <strong>metadata</strong> 📚<br>
+      It’s made up of <strong>1’s and 0’s</strong> — invisible digital signals the human eye can’t see,<br>
+      but together, they tell a unique story about the image’s journey 🖼️.</p>
     </div>
 
-    <div class="section" style="margin-top: -1rem; text-align: center;">
-      <img src="/static/spoof_g_j.jpg" alt="Uploaded Photo" class="example-image">
-    </div>
-
-    <div class="section" style="margin-top: -1.5rem; text-align: center;">
+    <div class="section" style="text-align: center;">
+      <img src="/static/spoof_g_j.jpg" alt="Grandma Sample" class="example-image">
       <h3>My grandma and I in NYC 🗽</h3>
       <p>To the human eye, the lighting feels natural, the setting looks real, and nothing seems obviously edited.</p>
     </div>
-
-    <div class="section" style="margin-top: -1rem; text-align: left; max-width: 700px; margin-left: auto; margin-right: auto;">
-      <h3>What Proof Sees: ❌ Feels Off</h3>
-      <div class="group-block">
-        <p><strong>→ Was it Born Real?</strong></p>
-        <p>1. Was this photo taken with a real phone or camera? → ✅ Yes</p>
-        <p>2. Does it still have the original date and time? → ❌ No</p>
-        <p>3. Is the lighting and detail natural? → ✅ Yes</p>
-      </div>
-      <div class="group-block">
-        <p><strong>→ Was it Left Untouched?</strong></p>
-        <p>4. No filters or beauty tools added? → ✅ Yes</p>
-        <p>5. No cropping or visual editing? → ❌ No</p>
-        <p>6. Has it only been saved once — not re-exported? → ❌ No</p>
-      </div>
-      <div class="group-block">
-        <p><strong>→ Was it Shared Naturally?</strong></p>
-        <p>7. Is the original filename still intact? → ❌ No</p>
-        <p>8. Was it not reposted or downloaded from the internet? → ❌ No</p>
-        <p>9. Was it shared directly (like via AirDrop or text)? → ❌ No</p>
-      </div>
-    </div>
-
-    <div class="section" style="margin-top: -1rem; text-align: center;">
-      <h3>Total: ✅ 3 Yes / ❌ 6 No</h3>
-    </div>
-
-    <div class="section" style="margin-top: -1rem;">
-      <table>
-        <thead>
-          <tr><th>Total "Yes"</th><th>What That Means</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>7–9</td><td>✅ Checks Out</td></tr>
-          <tr><td>4–6</td><td>⚠️ Use Caution</td></tr>
-          <tr><td>0–3</td><td>❌ Feels Off</td></tr>
-        </tbody>
-      </table>
-      <h3>Summary:</h3>
-      <p>While the photo seems real at first glance, the metadata tells another story — signs of edits, multiple saves, and indirect sharing suggest it’s been through a few digital hands.</p>
-
-      <div class="upload-box" onclick="this.querySelector('input').click();">
-        <div style="font-size: 2rem;">📷</div>
-        <div>Upload Photo</div>
-        <input type="file" class="photo-input" accept="image/*" style="display: none" onchange="handleFileUpload(this.files[0])" />
-      </div>
-    </div>
-
-    <footer style="text-align: center; margin-top: 3rem; font-size: 0.95rem; color: #999;">
-      contactus@proofme.ai
-    </footer>
   </div>
 
-  <div id="preview-section" style="display: none; text-align: center; margin-top: 2rem;">
-    <img id="preview-image" style="max-width: 400px; border-radius: 10px; margin-bottom: 1rem;" />
+  <div id="preview-section" style="display:none; text-align:center;">
+    <img id="preview-image" />
     <br>
-    <button id="submit-btn" class="btn-submit" disabled style="opacity: 0.5;" onclick="submitPhoto()">Submit Photo</button>
+    <button class="btn-submit" id="submit-btn" disabled style="opacity:0.5;" onclick="submitPhoto()">Submit Photo</button>
     <button class="btn-cancel" onclick="resetUpload()">Cancel</button>
   </div>
 
+  <div id="results-section" style="display:none;">
+    <img id="result-image" class="result-image" alt="Uploaded Photo" />
+    <div id="verdict"></div>
+    <div class="clue-block" id="clues"></div>
+    <div class="summary">
+      <strong>Summary:</strong>
+      <p id="summary"></p>
+    </div>
+    <button class="btn-blue" onclick="resetUpload()">Scan Another Photo 📷</button>
+  </div>
+
+  <footer style="text-align: center; margin-top: 3rem; font-size: 0.95rem; color: #999;">
+    contactus@proofme.ai
+  </footer>
+
 <script>
-  let uploadedFile = null;
-  let uploadedFileName = null;
-  let uploadedImageURL = null;
+let uploadedFile = null;
+let uploadedFileName = null;
+let uploadedImageURL = null;
 
-  function handleFileUpload(file) {
-    if (!file) return;
+function handleFileUpload(file) {
+  if (!file) return;
 
-    uploadedFileName = file.name;
-    uploadedFile = new FormData();
-    uploadedFile.append("photo", file);
+  uploadedFileName = file.name;
+  uploadedFile = new FormData();
+  uploadedFile.append("photo", file);
 
-    const reader = new FileReader();
-    reader.onload = function () {
-      document.getElementById('main-content').style.display = 'none';
-      document.getElementById('preview-section').style.display = 'block';
-      document.getElementById('preview-image').src = reader.result;
-    };
-    reader.readAsDataURL(file);
+  const reader = new FileReader();
+  reader.onload = function () {
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('preview-image').src = reader.result;
+  };
+  reader.readAsDataURL(file);
 
-    // Upload to S3
-    const formData = new FormData();
-    formData.append("photo", file);
-    fetch('/upload', {
-      method: 'POST',
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      uploadedImageURL = data.url;
+  const formData = new FormData();
+  formData.append("photo", file);
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    uploadedImageURL = data.url;
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('submit-btn').style.opacity = 1;
+  })
+  .catch(() => alert('Upload failed.'));
+}
 
-      // ✅ Re-enable the button here
-      document.querySelector('.btn-submit').disabled = false;
-      document.querySelector('.btn-submit').style.opacity = 1;
-
-    })
-    .catch(() => alert('Upload failed.'));
-  }
-
-  function submitPhoto() {
-    if (!uploadedFile || !uploadedFileName || !uploadedImageURL) return;
+function submitPhoto() {
+  if (!uploadedFile || !uploadedFileName || !uploadedImageURL) return;
 
   const submitBtn = document.querySelector('.btn-submit');
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.5;
-  submitBtn.innerHTML = `Scanning<spanid="scandots">.</span>`;
+  submitBtn.innerHTML = `Scanning<span id="scan-dots">.</span>`;
 
   let dotCount = 1;
   const scanDots = document.getElementById('scan-dots');
-
   const animateDots = setInterval(() => {
     dotCount = (dotCount % 3) + 1;
     scanDots.textContent = '.'.repeat(dotCount);
@@ -282,6 +209,7 @@
   formData.append("photo", uploadedFile.get("photo"));
   formData.append("filename", uploadedFileName);
   formData.append("url", uploadedImageURL);
+
   document.getElementById('fade').style.visibility = 'visible';
   document.getElementById('fade').style.opacity = 1;
 
@@ -289,14 +217,62 @@
     method: 'POST',
     body: formData
   })
-  .then(response => response.json())
+  .then(res => res.json())
   .then(data => {
     clearInterval(animateDots);
-    if (!data.success) throw new Error("Scan failed");
-    sessionStorage.setItem("scan_result", JSON.stringify(data));
-    sessionStorage.setItem("image_url", uploadedImageURL);
+    document.getElementById('fade').style.opacity = 0;
+    setTimeout(() => document.getElementById('fade').style.visibility = 'hidden', 300);
 
-    window.location.href = "/results.html";
+    if (!data.success) throw new Error("Scan failed");
+
+    const r = data.result;
+    const a = r.answers;
+    const yesCount = r.yes_count;
+    const noCount = r.no_count;
+    const clueBlock = document.getElementById('clues');
+    clueBlock.innerHTML = '';
+
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('result-image').src = uploadedImageURL;
+    document.getElementById('summary').textContent = r.response;
+
+    let finalVerdict = '';
+    if (yesCount >= 7) finalVerdict = '✅ Checks Out';
+    else if (yesCount >= 4) finalVerdict = '⚠️ Use Caution';
+    else finalVerdict = '❌ Feels Off';
+
+    document.getElementById('verdict').innerHTML = `
+      <h2>Result: ${finalVerdict}</h2>
+      <table>
+        <thead><tr><th>Total \"Yes\"</th><th>What That Means</th></tr></thead>
+        <tbody>
+          <tr><td>7–9</td><td>✅ Checks Out</td></tr>
+          <tr><td>4–6</td><td>⚠️ Use Caution</td></tr>
+          <tr><td>0–3</td><td>❌ Feels Off</td></tr>
+        </tbody>
+      </table>`;
+
+    const groups = [
+      { key: 'born_real', label: 'Born Real?' },
+      { key: 'left_untouched', label: 'Left Untouched?' },
+      { key: 'shared_naturally', label: 'Shared Naturally?' }
+    ];
+
+    let index = 1;
+    groups.forEach(group => {
+      const title = document.createElement('p');
+      title.textContent = `→ ${group.label}`;
+      title.style.fontWeight = 'bold';
+      clueBlock.appendChild(title);
+
+      (a[group.key] || []).forEach(([q, ans]) => {
+        const line = document.createElement('p');
+        line.style.marginLeft = '1rem';
+        line.textContent = `${index++}. ${q} — ${ans ? '✅ Yes' : '❌ No'}`;
+        clueBlock.appendChild(line);
+      });
+    });
   })
   .catch(err => {
     clearInterval(animateDots);
@@ -308,27 +284,28 @@
   });
 }
 
-  function resetUpload() {
-    uploadedFile = null;
-    uploadedImageURL = null;
-    document.querySelectorAll('.photo-input').forEach(input => input.value = '');
-    document.getElementById('main-content').style.display = 'block';
-    document.getElementById('preview-section').style.display = 'none';
-  }
+function resetUpload() {
+  uploadedFile = null;
+  uploadedImageURL = null;
+  document.querySelectorAll('.photo-input').forEach(input => input.value = '');
+  document.getElementById('main-content').style.display = 'block';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+}
 
-  function updateCounter() {
-    fetch('/count')
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('counter-num').textContent = data.count;
-      })
-      .catch(() => {
-        document.getElementById('counter-num').textContent = '...';
-      });
-  }
+function updateCounter() {
+  fetch('/count')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('counter-num').textContent = data.count;
+    })
+    .catch(() => {
+      document.getElementById('counter-num').textContent = '...';
+    });
+}
 
-  updateCounter();
-  setInterval(updateCounter, 5000);
+updateCounter();
+setInterval(updateCounter, 5000);
 </script>
- </body>
+</body>
 </html>
