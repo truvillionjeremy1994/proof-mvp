@@ -56,31 +56,9 @@
       font-size: 1.05rem;
       margin-bottom: 2rem;
     }
-    #fade {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: black;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.5rem;
-      z-index: 9999;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    #fade.show {
-      visibility: visible;
-      opacity: 1;
-    }
   </style>
 </head>
 <body>
-  <div id="fade"><span id="fade-text">Extracting Metadata</span><span id="dots">.</span></div>
 
   <div id="results" class="status">
     <div id="verdict"></div>
@@ -106,20 +84,20 @@
     const fade = document.getElementById('fade');
     const dotsSpan = document.getElementById('dots');
     let dotCount = 1;
-    fade.classList.add('show');
 
-    setInterval(() => {
+    const dotInterval = setInterval(() => {
       dotCount = (dotCount % 3) + 1;
       dotsSpan.textContent = '.'.repeat(dotCount);
     }, 500);
 
-    setTimeout(() => {
-      document.getElementById('fade-text').textContent = 'Delivering Results';
-    }, 5000);
+   setTimeout(() => {
+  document.getElementById('fade-text').textContent = 'Delivering Results';
+}, 5000);
 
-    setTimeout(() => {
-      fade.classList.remove('show');
-    }, 10000);
+setTimeout(() => {
+  fade.classList.remove('show');
+  clearInterval(dotInterval);
+}, 10000);
 
     const data = JSON.parse(sessionStorage.getItem("scan_result"));
     if (data && data.result && data.result.url) {

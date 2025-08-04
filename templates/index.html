@@ -220,70 +220,106 @@
     <button class="btn-cancel" onclick="resetUpload()">Cancel</button>
   </div>
 
-  <script>
-    let uploadedFile = null;
-    let uploadedFileName = null;
+<script>
+  let uploadedFile = null;
+  let uploadedFileName = null;
+  let uploadedImageURL = null;
 
-    function handleFileUpload(file) {
-      if (!file) return;
+  function handleFileUpload(file) {
+    if (!file) return;
 
-      uploadedFileName = file.name;
-      uploadedFile = new FormData();
-      uploadedFile.append("photo", file);
+    uploadedFileName = file.name;
+    uploadedFile = new FormData();
+    uploadedFile.append("photo", file);
 
-      const reader = new FileReader();
-      reader.onload = function () {
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('preview-section').style.display = 'block';
+    const reader = new FileReader();
+    reader.onload = function () {
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('preview-section').style.display = 'block';
+      document.getElementById('preview-image').src = reader.result;
+    };
+    reader.readAsDataURL(file);
 
-        const img = document.getElementById('preview-image');
-        if (img) img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
+    // Upload to S3
+    const formData = new FormData();
+    formData.append("photo", file);
+    fetch('/upload', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      uploadedImageURL = data.url;
+    })
+    .catch(() => alert('Upload failed.'));
+  }
 
-    function submitPhoto() {
-      if (!uploadedFile || !uploadedFileName) return;
+  function submitPhoto() {
+    if (!uploadedFile || !uploadedFileName || !uploadedImageURL) return;
 
-      const formData = new FormData();
-      formData.append("photo", uploadedFile.get("photo"));
-      formData.append("filename", uploadedFileName);
+    const submitBtn = document.querySelector('.btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = 0.5;
+    submitBtn.textContent = "Scanning...";
 
-      fetch('/submit', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
+    document.getElementById('fade').classList.add('show');
+    document.getElementById('fade-text').textContent = 'Scanning image';
+    let dotCount = 1;
+    const dotsSpan = document.getElementById('dots');
+    const dotInterval = setInterval(() => {
+      dotCount = (dotCount % 3) + 1;
+      dotsSpan.textContent = '.'.repeat(dotCount);
+    }, 500);
+
+    const formData = new FormData();
+    formData.append("photo", uploadedFile.get("photo"));
+    formData.append("filename", uploadedFileName);
+    formData.append("url", uploadedImageURL);
+
+    fetch('/submit', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      clearInterval(dotInterval);
+      if (!data.success) throw new Error("Scan failed");
+      sessionStorage.setItem("scan_result", JSON.stringify(data));
+      sessionStorage.setItem("image_url", uploadedImageURL);
+      window.location.href = "/results.html";
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Something went wrong.');
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = 1;
+      submitBtn.textContent = "Submit Photo";
+      document.getElementById('fade').classList.remove('show');
+      clearInterval(dotInterval);
+    });
+  }
+
+  function resetUpload() {
+    uploadedFile = null;
+    uploadedImageURL = null;
+    document.querySelectorAll('.photo-input').forEach(input => input.value = '');
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('preview-section').style.display = 'none';
+  }
+
+  function updateCounter() {
+    fetch('/count')
+      .then(res => res.json())
       .then(data => {
-        sessionStorage.setItem("scan_result", JSON.stringify(data));
-        window.location.href = "/results.html";
+        document.getElementById('counter-num').textContent = data.count;
       })
-      .catch(err => {
-        console.error(err);
-        alert('Something went wrong.');
+      .catch(() => {
+        document.getElementById('counter-num').textContent = '...';
       });
-    }
+  }
 
-    function resetUpload() {
-      uploadedFile = null;
-      document.querySelectorAll('.photo-input').forEach(input => input.value = '');
-      document.getElementById('main-content').style.display = 'block';
-      document.getElementById('preview-section').style.display = 'none';
-    }
-
-    function updateCounter() {
-      fetch('/count')
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('counter-num').textContent = data.count;
-        })
-        .catch(() => {
-          document.getElementById('counter-num').textContent = '...';
-        });
-    }
-
-    updateCounter();
-    setInterval(updateCounter, 5000);
-  </script>
-</body>
+  updateCounter();
+  setInterval(updateCounter, 5000);
+</script>
+ </body>
 </html>

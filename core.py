@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import re
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -11,10 +12,8 @@ from PIL.ExifTags import TAGS
 
 app = Flask(__name__)
 
-# OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# S3 config
 s3 = boto3.client('s3',
     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
@@ -96,7 +95,11 @@ Use this structure:
 8⃣ Was it not reposted or downloaded from the internet?
 9⃣ Was it shared directly (like via AirDrop or text)?
 
-Respond YES or NO to each. Then summarize in 30 words or less — not a judgment — just describe the photo's clarity based on metadata alone.
+Respond exactly like this:
+→ Born Real?
+1⃣ Question → ✅ Yes / ❌ No
+...
+Summary: [brief summary based on metadata]
 
 Metadata:
 {json.dumps(metadata, indent=2)}
@@ -113,12 +116,33 @@ Metadata:
     full_story_output = response.choices[0].message.content
     filename_prefix = filename.rsplit('.', 1)[0]
 
+    answers = {
+        "born_real": [],
+        "left_untouched": [],
+        "shared_naturally": []
+    }
+
+    lines = full_story_output.splitlines()
+    current_group = None
+    group_map = {
+        "→ Born Real?": "born_real",
+        "→ Left Untouched?": "left_untouched",
+        "→ Shared Naturally?": "shared_naturally"
+    }
+
+    for line in lines:
+        line = line.strip()
+        if line in group_map:
+            current_group = group_map[line]
+        elif current_group and '→' in line:
+            parts = line.split('→')
+            if len(parts) == 2:
+                question = parts[0].strip()
+                answer = parts[1].strip()
+                answers[current_group].append([question, answer == '✅ Yes'])
+
     result = {
-        "answers": {
-            "born_real": [],
-            "left_untouched": [],
-            "shared_naturally": []
-        },
+        "answers": answers,
         "yes_count": full_story_output.count("✅ Yes"),
         "no_count": full_story_output.count("❌ No"),
         "response": full_story_output.strip(),
