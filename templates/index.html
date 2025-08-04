@@ -177,7 +177,7 @@
     </div>
 
     <div class="section" style="margin-top: -1rem; text-align: center;">
-      <img src="/static/uploads/spoof_g_j.jpg" alt="Uploaded Photo" class="example-image">
+      <img src="/static/spoof_g_j.jpg" alt="Uploaded Photo" class="example-image">
     </div>
 
     <div class="section" style="margin-top: -1.5rem; text-align: center;">
@@ -272,27 +272,29 @@
       reader.readAsDataURL(file);
     }
 
-    function submitPhoto() {
-      if (!uploadedFile || !uploadedFileName) return;
+function submitPhoto() {
+  if (!uploadedFile || !uploadedFileName) return;
 
-      sessionStorage.setItem("uploadedFilename", uploadedFileName);
+  const formData = new FormData();
+  formData.append("photo", uploadedFile.get("photo"));   // send the actual image
+  formData.append("filename", uploadedFileName);         // send filename for logging
 
-      fetch('/upload', {
-        method: 'POST',
-        body: uploadedFile
-      })
-      .then(response => {
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else {
-          alert('Upload failed.');
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Something went wrong.');
-      });
-    }
+  fetch('/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Optionally replace this with redirect or UI update
+    alert("Scan complete.");
+    console.log("Scan Result:", data.output);
+    location.reload(); // Or redirect to a results.html page if you build one
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Something went wrong.');
+  });
+}
 
     function resetUpload() {
       uploadedFile = null;
