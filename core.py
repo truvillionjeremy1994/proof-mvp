@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -10,7 +11,7 @@ from PIL.ExifTags import TAGS
 
 app = Flask(__name__)
 
-# Load OpenAI key from environment (✅ no secrets in code)
+# Load OpenAI key from environment
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # S3 config
@@ -35,7 +36,11 @@ def extract_metadata(file_stream):
 
 def save_json_to_s3(data, filename_prefix):
     timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
+    session_id = str(uuid.uuid4())
+    data["timestamp"] = timestamp
+    data["session_id"] = session_id
     filename = f"logs/{filename_prefix}_{timestamp}.json"
+
     s3.put_object(
         Bucket=BUCKET_NAME,
         Key=filename,
@@ -53,7 +58,7 @@ def upload_file():
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
-    filename = request.json.get('filename')
+    filename = request.form.get('filename')
     file = request.files['photo'] if 'photo' in request.files else None
     if not file:
         return "No photo uploaded", 400
@@ -94,23 +99,28 @@ Metadata:
 
     full_story_output = response['choices'][0]['message']['content']
     filename_prefix = filename.rsplit('.', 1)[0]
-    save_json_to_s3({"filename": filename, "output": full_story_output}, filename_prefix)
 
     result = {
-    "answers": {
-        "born_real": [],
-        "left_untouched": [],
-        "shared_naturally": []
-    },
-    "yes_count": full_story_output.count("✅ Yes"),
-    "no_count": full_story_output.count("❌ No"),
-    "response": full_story_output.strip()
-}
+        "answers": {
+            "born_real": [],
+            "left_untouched": [],
+            "shared_naturally": []
+        },
+        "yes_count": full_story_output.count("✅ Yes"),
+        "no_count": full_story_output.count("❌ No"),
+        "response": full_story_output.strip()
+    }
 
-return jsonify({
-    "success": True,
-    "result": result
-})
+    # Save full result object, not just raw output
+    save_json_to_s3({
+        "filename": filename,
+        "result": result
+    }, filename_prefix)
+
+    return jsonify({
+        "success": True,
+        "result": result
+    })
 
 @app.route('/uploads/<filename>')
 def serve_file(filename):
