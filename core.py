@@ -104,6 +104,7 @@ Metadata:
 
         response = client.chat.completions.create(
             model="gpt-4o",
+            response_format="json",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -115,13 +116,24 @@ Metadata:
 
         try:
             result_json = json.loads(content)
-        except json.JSONDecodeError:
-            return jsonify({"success": False, "error": "Invalid JSON returned from GPT"}), 500
+        except json.JSONDecodeError as e:
+            print("❌ GPT JSON Decode Error")
+            print("🔎 Raw content returned from GPT:")
+            print(content)
+
+            save_json_to_s3({
+                "error": "Invalid JSON from GPT",
+                "raw_response": content,
+                "filename": filename,
+                "metadata": metadata
+            }, f"{filename.rsplit('.',1)[0]}_invalid_json")
+
+            return jsonify({"success": False, "error": "Invalid JSON from GPT"}), 500
 
         result_json["answers"] = {
-            "born_real": result_json.pop("born_real", []),
-            "left_untouched": result_json.pop("left_untouched", []),
-            "shared_naturally": result_json.pop("shared_naturally", [])
+            "born_real": result_json["born_real"],
+            "left_untouched": result_json["left_untouched"],
+            "shared_naturally": result_json["shared_naturally"]
         }
 
         result_json["filename"] = filename
