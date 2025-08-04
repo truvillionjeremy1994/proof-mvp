@@ -19,6 +19,7 @@ s3 = boto3.client('s3',
 )
 BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
 
+
 def extract_metadata(file_stream):
     try:
         image = Image.open(file_stream)
@@ -30,6 +31,7 @@ def extract_metadata(file_stream):
         return metadata
     except Exception as e:
         return {"error": str(e)}
+
 
 def save_json_to_s3(data, filename_prefix):
     timestamp = datetime.utcnow().strftime('%Y%m%dT%H%M%S')
@@ -43,6 +45,7 @@ def save_json_to_s3(data, filename_prefix):
         Body=json.dumps(data),
         ContentType='application/json'
     )
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -60,19 +63,19 @@ def upload_file():
     )
 
     s3_url = f"https://{BUCKET_NAME}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{s3_key}"
-    return jsonify({"filename": filename, "url": s3_url})
+    return jsonify({"filename": filename, "image_url": s3_url, "s3_key": s3_key})
+
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
     try:
-        filename = request.form.get('filename')
-        file = request.files.get('photo')
-        s3_url = request.form.get('url')
+        data = request.get_json()
+        s3_key = data.get("s3_key")
+        if not s3_key:
+            return jsonify({"success": False, "error": "Missing S3 key"}), 400
 
-        if not file or not filename:
-            return jsonify({"success": False, "error": "Missing file or filename"}), 400
-
-        metadata = extract_metadata(file.stream)
+        obj = s3.get_object(Bucket=BUCKET_NAME, Key=s3_key)
+        metadata = extract_metadata(obj['Body'])
 
         system_prompt = """
 Return only valid JSON. Do not explain anything. Group exactly 9 questions into 3 labeled sections: 'born_real', 'left_untouched', and 'shared_naturally'. Each section must include exactly 3 items, formatted as [question_text, true|false]. Also include: final_verdict (emoji + text), yes_count (0–9), no_count (0–9), and a response that’s 30 words or less, neutral, and tells a story about that photo's life in JSON only. No markdown. No extra commentary.
@@ -124,9 +127,9 @@ Metadata:
             save_json_to_s3({
                 "error": "Invalid JSON from GPT",
                 "raw_response": content,
-                "filename": filename,
+                "s3_key": s3_key,
                 "metadata": metadata
-            }, f"{filename.rsplit('.',1)[0]}_invalid_json")
+            }, f"{s3_key.rsplit('/',1)[-1].rsplit('.',1)[0]}_invalid_json")
 
             return jsonify({"success": False, "error": "Invalid JSON from GPT"}), 500
 
@@ -136,16 +139,16 @@ Metadata:
             "shared_naturally": result_json["shared_naturally"]
         }
 
-        result_json["filename"] = filename
-        result_json["url"] = s3_url
+        result_json["s3_key"] = s3_key
 
-        save_json_to_s3({"filename": filename, "result": result_json}, filename.rsplit(".", 1)[0])
+        save_json_to_s3({"s3_key": s3_key, "result": result_json}, s3_key.rsplit("/", 1)[-1].rsplit(".", 1)[0])
 
         return jsonify({"success": True, "result": result_json})
 
     except Exception as e:
         print("❌ Error in /submit:", e)
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route('/count', methods=['GET'])
 def count():
@@ -157,13 +160,16 @@ def count():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     return send_from_directory('static', filename)
 
+
 @app.route('/')
 def index():
     return send_from_directory('templates', 'index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

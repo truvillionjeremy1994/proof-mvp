@@ -202,16 +202,11 @@
   </div>
 
 <script>
-let uploadedFile = null;
-let uploadedFileName = null;
+let uploadedS3Key = null; // Added
 let uploadedImageURL = null;
 
 function handleFileUpload(file) {
   if (!file) return;
-
-  uploadedFileName = file.name;
-  uploadedFile = new FormData();
-  uploadedFile.append("photo", file);
 
   const reader = new FileReader();
   reader.onload = function () {
@@ -223,13 +218,15 @@ function handleFileUpload(file) {
 
   const formData = new FormData();
   formData.append("photo", file);
+
   fetch('/upload', {
     method: 'POST',
     body: formData
   })
   .then(res => res.json())
   .then(data => {
-    uploadedImageURL = data.url;
+    uploadedImageURL = data.image_url;
+    uploadedS3Key = data.s3_key; // Store S3 key for /submit
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('submit-btn').style.opacity = 1;
   })
@@ -237,7 +234,7 @@ function handleFileUpload(file) {
 }
 
 function submitPhoto() {
-  if (!uploadedFile || !uploadedFileName || !uploadedImageURL) return;
+  if (!uploadedS3Key || !uploadedImageURL) return;
 
   const submitBtn = document.querySelector('.btn-submit');
   submitBtn.disabled = true;
@@ -251,17 +248,13 @@ function submitPhoto() {
     scanDots.textContent = '.'.repeat(dotCount);
   }, 500);
 
-  const formData = new FormData();
-  formData.append("photo", uploadedFile.get("photo"));
-  formData.append("filename", uploadedFileName);
-  formData.append("url", uploadedImageURL);
-
   document.getElementById('fade').style.visibility = 'visible';
   document.getElementById('fade').style.opacity = 1;
 
   fetch('/submit', {
     method: 'POST',
-    body: formData
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ s3_key: uploadedS3Key })
   })
   .then(res => res.json())
   .then(data => {
@@ -329,29 +322,6 @@ function submitPhoto() {
     submitBtn.textContent = "Submit Photo";
   });
 }
-
-function resetUpload() {
-  uploadedFile = null;
-  uploadedImageURL = null;
-  document.querySelectorAll('.photo-input').forEach(input => input.value = '');
-  document.getElementById('main-content').style.display = 'block';
-  document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('results-section').style.display = 'none';
-}
-
-function updateCounter() {
-  fetch('/count')
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById('counter-num').textContent = data.count;
-    })
-    .catch(() => {
-      document.getElementById('counter-num').textContent = '...';
-    });
-}
-
-updateCounter();
-setInterval(updateCounter, 5000);
 </script>
 </body>
 </html>
