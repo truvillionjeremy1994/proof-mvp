@@ -74,7 +74,7 @@ def submit_file():
     metadata = extract_metadata(file.stream)
 
     system_prompt = """
-Return only valid JSON. Do not explain anything. Group exactly 9 questions into 3 labeled sections: 'born_real', 'left_untouched', and 'shared_naturally'. Each section must include exactly 3 items, formatted as [question_text, true|false]. Also include: final_verdict (emoji + text), yes_count (0–9), no_count (0–9), and a response that’s short, neutral, and clearly understandable but respects general human intelligence in JSON only. No markdown. No extra commentary.
+Return only valid JSON. Do not explain anything. Group exactly 9 questions into 3 labeled sections: 'born_real', 'left_untouched', and 'shared_naturally'. Each section must include exactly 3 items, formatted as [question_text, true|false]. Also include: final_verdict (emoji + text), yes_count (0–9), no_count (0–9), and a response that’s 30 words or less, neutral, and tells a story about that photo's life in JSON only. No markdown. No extra commentary.
 """
 
     user_prompt = f"""

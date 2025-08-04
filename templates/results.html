@@ -85,6 +85,9 @@
   </div>
 
  <script>
+  if (!sessionStorage.getItem("scan_result")) {
+  window.location.href = "/";
+  }
   const data = JSON.parse(sessionStorage.getItem("scan_result"));
 
   if (!data || !data.success) {
@@ -101,6 +104,8 @@
     // ✅ Image load logic
     const image = document.getElementById('image');
     const imageUrl = r.url;
+    console.log("🖼️ Image URL:", imageUrl);
+
 
     if (imageUrl) {
       image.src = imageUrl;
