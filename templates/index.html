@@ -129,7 +129,7 @@
 </head>
 <body>
   <div id="fade" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;color:white;display:flex;justify-content:center;align-items:center;font-size:1.5rem;z-index:9999;visibility:hidden;opacity:0;transition:opacity 0.3s ease;">
-    <span id="scan-status">Scanning<span id="scan-dots">.</span></span>
+    <span id="scan-status">Standby For Results<span id="scan-dots">.</span></span>
   </div>
   <h1>PROOF</h1>
   <p class="tagline">Upload a photo — See if it ✅ Checks Out or ❌ Feels Off.</p>
@@ -268,7 +268,7 @@
   const submitBtn = document.querySelector('.btn-submit');
   submitBtn.disabled = true;
   submitBtn.style.opacity = 0.5;
-  submitBtn.innerHTML = `StandBy For Results<spanid="scandots">.</span>`;
+  submitBtn.innerHTML = `Standby For Results<spanid="scandots">.</span>`;
 
   let dotCount = 1;
   const scanDots = document.getElementById('scan-dots');
